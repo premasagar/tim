@@ -28,7 +28,7 @@ var tim = (function(){
     var starts  = "{{",
         ends    = "}}",
         path    = "[a-z0-9_][\\.a-z0-9_]*", // e.g. config.person.name
-        pattern = new RegExp(starts + "("+ path +")" + ends, "gim"),
+        pattern = new RegExp(starts + "("+ path +")" + ends, "gi"),
         undef;
     
     return function(template, data, notFound){
