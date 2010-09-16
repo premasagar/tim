@@ -129,7 +129,7 @@ or:
 
 ## Changing the {{curly braces}} delimiter
 By default, template tags are delimited by "`{{`" and "`}}`".
-To change this, edit the `starts` and `ends` vars in the function.
+To change this, edit the `starts` and `ends` vars in the code.
 
 
 ## Embedding micro-templates in an HTML document
