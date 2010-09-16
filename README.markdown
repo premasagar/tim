@@ -127,7 +127,7 @@ or:
     // "Hello world"
 
 
-## Changing the `{{`delimiter`}}`
+## Changing the {{curly braces}} delimiter
 By default, template tags are delimited by "`{{`" and "`}}`".
 To change this, edit the `starts` and `ends` vars below.
 
