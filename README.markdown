@@ -42,7 +42,9 @@ For these reasons, it is now in use in Sqwidget, the JavaScript widget library: 
     // "Hello Brighton. My name is Prem."
 
 
-In addition to plain and simple text, you can use Tim to populate HTML or other types of template. For example:
+In addition to plain and simple text, you can use Tim to populate HTML or other types of template.
+
+For example:
 
     var myTemplate = "<p><a href='{{url}}'>{{title}}</a></p>",
         data = {
@@ -57,7 +59,9 @@ In addition to plain and simple text, you can use Tim to populate HTML or other 
 
 
 ## Nested templates
-Sometimes, the same template may need to be populated within a loop, and then wrapped within a bigger template - e.g. when creating an HTML `<ul>` list tag. This is easily achieved:
+Sometimes, you will want to reuse the same template multiple times in a loop, and then wrapped within a bigger template - e.g. when creating an HTML `<ul>` list tag.
+
+This is easily achieved:
 
     var ul = "<ul>{{list}}</ul>",
         li = "<li>{{contents}}</li>",
@@ -78,10 +82,12 @@ If your template references a path in the data object that could not actually be
     
 This helps with debugging when creating templates.
 
-If you want to save precious few bytes, and you are certain that your templates will never fail, then feel free to rip out this block: "`if (lookup === undef){ [...] }`"
+If you want to save precious few bytes, and you are certain that your templates will never fail, then feel free to rip out this block:
+
+    if (lookup === undef){ [...] }
 
 
-## `notFound`: an optional third argument
+## Optional third argument: `notFound`
 As an alternative to the default debug errors, you can pass an optional third argument "`notFound`", which will be used as the default substitution string, when a property is not found in the data object.
 
 e.g.
@@ -121,8 +127,8 @@ or:
     // "Hello world"
 
 
-## Changing the {{delimiter}}
-By default, template tags are delimited by "{{" and "}}".
+## Changing the `{{`delimiter`}}`
+By default, template tags are delimited by "`{{`" and "`}}`".
 To change this, edit the `starts` and `ends` vars below.
 
 
