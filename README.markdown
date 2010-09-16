@@ -2,13 +2,12 @@
 
 A tiny, secure JavaScript micro-templating script.
 
+You can use Tim to write simple templates that use JavaScript's familiar dot notation to replace template tags with JSON object properties.
+
 * by [Premasagar Rose](http://premasagar.com) 
     ([Dharmafly](http://dharmafly.com))
-* source: [github.com/premasagar/tim](http://github.com/premasagar/tim)
-* [MIT license](http://opensource.org/licenses/mit-license.php)
+* source: [github.com/premasagar/tim](http://github.com/premasagar/tim) ([MIT license](http://opensource.org/licenses/mit-license.php))
 * 232 bytes minified & gzipped
-
-You can use Tim to write simple templates that use JavaScript's familiar dot notation to replace template tags with JSON object properties.
 
 
 ## Why is micro-templating useful?
@@ -158,4 +157,4 @@ It also makes your code more maintainable - the markup templates can live with t
 different place.
 
 ## Feedback
-Do you have any issues, questions or suggestions? See [github.com/premasagar/tim/issues](http://github.com/premasagar/tim/issues), or contact me ([@premasagar](http://twitter.com/premasagar))
+Do you have any issues, questions or suggestions, or are you finding Tim useful in one of your projects? See [github.com/premasagar/tim/issues](http://github.com/premasagar/tim/issues), or get in touch ([@premasagar](http://twitter.com/premasagar))
