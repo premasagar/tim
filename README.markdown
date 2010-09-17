@@ -2,28 +2,35 @@
 
 A tiny, secure JavaScript micro-templating script.
 
-You can use Tim to write simple templates that use JavaScript's familiar dot notation to replace template tags with JSON object properties.
+You can use Tim to write simple templates that use JavaScript's familiar dot notation, passing in a JavaScript object that contains all the strings to be substited into the template.
+
+e.g.
+
+    tim("Hello {{place}}", {place: "world"});
+    // "Hello world"
 
 * by [Premasagar Rose](http://premasagar.com) 
     ([Dharmafly](http://dharmafly.com))
 * source: [github.com/premasagar/tim](http://github.com/premasagar/tim) ([MIT license](http://opensource.org/licenses/mit-license.php))
-* 232 bytes minified & gzipped
+* 219 bytes minified & gzipped
 
 
 ## Why is micro-templating useful?
-Don't you just hate having to write HTML with a mess of string concatenation?:
+Don't you just hate having to write HTML with a mess of string concatenation that clutters up your JavaScript?:
 
     var myHTML = "<ul class='" + myClass + "'>" +
         "<li id='" + theId + "'>" + liContents + "</li>" +
         // etc, etc, etc
         
-Yuck. There's no need to do this. Simply prepare a JavaScript object with the required dynamic properties, and keep the HTML all together in a "micro-template". See below for details on keeping micro-templates inline within an HTML document.
+Yuck. There's no need to do this. Simply prepare a JavaScript object with the required properties, and inject it into a simple template string. The templates can all be tidily kept together with the rest of the markup in an HTML document (see below).
 
 
 ## How is Tim different from other templating scripts?
 It is safe and secure: it doesn't use eval or (new Function), so it cannot execute malicious code. As such, it can be used in secure widgets and apps that disallow eval - e.g. Adobe Air sandboxes, AdSafe ads, etc.
 
 It doesn't include a whole bloat load of features that are unlikely to get used when you just want to get some simple templating up and running.
+
+It's easy to debug.
 
 For these reasons, it is now in use in Sqwidget, the JavaScript widget library: [github.com/premasagar/sqwidget](http://github.com/premasagar/sqwidget)
 
@@ -38,7 +45,7 @@ For these reasons, it is now in use in Sqwidget, the JavaScript widget library: 
             }
         };
         
-    var myText = tim(template, data);
+    tim(template, data);
     // "Hello Brighton. My name is Prem."
 
 
@@ -46,13 +53,13 @@ In addition to plain and simple text, you can use Tim to populate HTML or other 
 
 For example:
 
-    var myTemplate = "<p><a href='{{url}}'>{{title}}</a></p>",
+    var template = "<p><a href='{{url}}'>{{title}}</a></p>",
         data = {
             title: "Dharmafly",
             url:   "http://dharmafly.com"
         };
         
-    var myHTML = tim(myTemplate, data);
+    tim(myTemplate, data);
     // "<p><a href='http://dharmafly.com'>Dharmafly</a></p>"
     
 ...and so on, all the way up to a full-blown HTML document.
@@ -73,36 +80,19 @@ This is easily achieved:
     }
     tim(ul, {list: myList});
     // "<ul><li>100</li><li>101</li><li>102</li></ul>"
+    
+_(NOTE: It's under consideration whether to include a terse syntax for Tim for iterating over array elements, in a loop. Watch this space)._
         
 
 ## Debugging
-If your template references a path in the data object that could not actually be found, then Tim will throw an error saying something like:
+If your template references a path in the data object that could not actually be found, then Tim will throw an error, to help with debugging:
 
-    tim: 'foo' not found in {{config.foo.bar}}
-    
-This helps with debugging when creating templates.
+    tim("Hello {{config.foo.bar}}", {config: {moo: "blah"}});
+    // tim: 'foo' not found in {{config.foo.bar}}
 
 If you want to save precious few bytes, and you are certain that your templates will never fail, then feel free to rip out this block:
 
     if (lookup === undef){ [...] }
-
-
-## Optional third argument: `notFound`
-As an alternative to the default debug errors, you can pass an optional third argument "`notFound`", which will be used as the default substitution string, when a property is not found in the data object.
-
-e.g.
-
-    tim(
-        "Results: {{a}}, {{b}}, {{c}}",
-        {
-            a: "foo",
-            b: "bar"
-        },
-        "n/a"
-    );
-    // "Results: foo, bar, n/a"
-    
-For the `notFound` subsitution string, you might want to use HTML or simply an empty string `""`.
 
 
 ## Using arrays
@@ -110,57 +100,68 @@ The data can be, or can include, an array. Use dot notation to access the array 
 
 e.g:
 
-    tim(
-        "Hello {{0}}",
-        ["world"]
-    );
+    tim("Hello {{0}}", ["world"]);
     // "Hello world"
     
 or:
 
-    tim(
-        "Hello {{places.0}}",
-        {
-            places: ["world"]
-        }
-    );
+    tim("Hello {{places.0}}", {places: ["world"]});
     // "Hello world"
 
 
 ## Changing the {{curly braces}} delimiter
-By default, template tags are delimited by "`{{`" and "`}}`".
+By default, template tags are delimited by "`{{`" and "`}}`" tokens.
 To change this, edit the `starts` and `ends` vars in the code.
 
 
-## Embedding micro-templates in an HTML document
-A little known aspect of browser parsing of HTML documents is that if a document contains a `<script>` tag that has a non-standard `type` attribute, then the browser will not attempt to parse the script element - but it will allow us to grab its contents. This leads us to a very useful coding pattern:
+## Embedding micro-templates within an HTML document
+A little known aspect of browser parsing of HTML documents is that if a document contains a `<script>` tag that has a non-standard `type` attribute, then the browser will not attempt to parse that script element. However, JavaScript can still access the contents of the element. This leads us to a very useful coding pattern:
 
-in the HTML, add a script tag with any non-standard type:
+in the HTML, add a script tag with a non-standard type, e.g. "`tim`:
 
-    <script type="text/template" id="foo">
+    <script type="tim" id="foo">
         <p><a href='{{url}}'>{{title}}</a></p>
     </script>
     
 and in the JavaScript, grab the script element by its `id` and extract its contents:
 
-    var myTemplate = document.getElementById("foo").innerHTML,
+    var template = document.getElementById("foo").innerHTML,
         data = {
             title: "Dharmafly",
             url:   "http://dharmafly.com"
         };
         
-    var myHTML = tim(myTemplate, data);
+    tim(template, data);
     // "<p><a href='http://dharmafly.com'>Dharmafly</a></p>"
 
-then do something with your newly populated template, like replace an element in the DOM with it:
+then do something with your newly populated HTML, such as inject it into an element in the DOM:
 
     document.getElementById("bar").innerHTML = myHTML;
+        
 
-Working in this way brings some sanity back to application
-development, where you want to specify the markup structure, but swap in specific text and attributes, or whole blocks of markup.
+Working in this way brings some sanity back to application development, where you want to specify the markup structure, but swap in specific text and attributes, or whole blocks of markup.
 
 It also makes your code more maintainable - the markup templates can live with the rest of the static markup on a page, where the markup coder can access it, and the JavaScript logic lives in an entirely
 different place.
 
+### Another example
+This time, using class names on the script element, and jQuery:
+
+    <!-- HTML -->
+    <script type="tim" class="foo">
+        <p><a href='{{url}}'>{{title}}</a></p>
+    </script>
+    
+    /* JavaScript */
+    var template = jQuery("script[type=tim].foo").html(),
+        data = {
+            title: "Dharmafly",
+            url:   "http://dharmafly.com"
+        };
+        
+    jQuery("#bar").html(
+        tim(template, data)
+    );
+
 ## Feedback
-Do you have any issues, questions or suggestions, or are you finding Tim useful in one of your projects? See [github.com/premasagar/tim/issues](http://github.com/premasagar/tim/issues), or get in touch ([@premasagar](http://twitter.com/premasagar))
+Do you have any issues, questions or suggestions, or are you finding Tim useful in one of your projects? See [github.com/premasagar/tim/issues](http://github.com/premasagar/tim/issues), or get in touch ([@premasagar](http://twitter.com/premasagar)).

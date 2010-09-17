@@ -20,7 +20,7 @@
 
     **
         
-    v0.2
+    v0.2.1
         
 */
 
@@ -31,7 +31,7 @@ var tim = (function(){
         pattern = new RegExp(starts + "("+ path +")" + ends, "gi"),
         undef;
     
-    return function(template, data, notFound){
+    return function(template, data){
         // Merge the data into the template string
         return template.replace(pattern, function(tag, ref){
             var path = ref.split("."),
@@ -44,10 +44,6 @@ var tim = (function(){
                 
                 // Error handling for when the property is not found
                 if (lookup === undef){
-                    // If specified, substitute with the "not found" arg
-                    if (notFound !== undef){
-                        return notFound;
-                    }
                     // Throw error
                     throw "tim: '" + path[i] + "' not found in " + tag;
                 }
