@@ -2,7 +2,7 @@
 
 A tiny, secure JavaScript micro-templating script.
 
-You can use Tim to write simple templates that use JavaScript's familiar dot notation, passing in a JavaScript object that contains all the strings to be substited into the template. For example:
+Tim lets you write simple templates that uses JavaScript's familiar dot notation. You pass in a JavaScript object that contains all the relevant strings, and they are then substited into the template. For example:
 
     tim("Hello {{place}}", {place: "world"});
     // "Hello world"
