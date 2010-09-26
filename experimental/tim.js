@@ -69,45 +69,45 @@ var tim = (function(){
         plugin,
         tim;
 
-    function applyPlugins(fragment){
+    function applyPlugins(template){
         var i = 0,
             plugin;
         
         for (; i < pluginsLength; i++){
             plugin = plugins[i];
-            if (plugin.regex.test(fragment)){
-                fragment = fragment.replace(plugin.regex, plugin.fn);
+            if (plugin.regex.test(template)){
+                template = template.replace(plugin.regex, plugin.fn);
             }
         }
-        return fragment;
+        return template;
     }
 
-    function nextFragment(template){
+    function nextToken(template){
         var posFirstOpen = template.indexOf(start),
             posLastClose = 0,
             posOpen,
             posClose,
             tokensOpen = 0,
-            fragment;
+            token;
         
         if (posFirstOpen >= 0){
             tokensOpen ++;
-            fragment = template.slice(posFirstOpen + startLength);
+            token = template.slice(posFirstOpen + startLength);
             posLastClose += posFirstOpen + startLength;
         }
         
         while (tokensOpen){
-            posClose = fragment.indexOf(end);
-            posOpen = fragment.indexOf(start);
+            posClose = token.indexOf(end);
+            posOpen = token.indexOf(start);
             
             if (posOpen >= 0 && posOpen < posClose){
                 tokensOpen ++;
-                fragment = fragment.slice(posOpen + startLength);
+                token = token.slice(posOpen + startLength);
                 posLastClose += posOpen + startLength;
             }
             else if (posClose >= 0){
                 tokensOpen --;
-                fragment = fragment.slice(posClose + endLength);
+                token = token.slice(posClose + endLength);
                 posLastClose += posClose + endLength;
             }
             else { // unmatched closing braces
@@ -117,17 +117,17 @@ var tim = (function(){
 
         // if we've found a full token
         if (posClose >= 0){
-            fragment = template.slice(posFirstOpen + startLength, posLastClose - endLength);
-            fragment = applyPlugins(fragment);
-            template = template.slice(0, posFirstOpen) + fragment + template.slice(posLastClose);
-            // run again, for next fragment
-            return nextFragment(template);
+            token = template.slice(posFirstOpen + startLength, posLastClose - endLength);
+            token = applyPlugins(token);
+            template = template.slice(0, posFirstOpen) + token + template.slice(posLastClose);
+            // run again, for next token
+            return nextToken(template);
         }
         return template;
     }
 
     tim = function(template, data){    
-        return nextFragment(template);
+        return nextToken(template);
     };
     
     tim.plugin = function(regex, fn, priority){
@@ -170,6 +170,9 @@ tim.plugin(/^[a-z0-9_][\.a-z0-9_]*$/g, function(template){
     }
 });
 
+//////////////////////
+
+// Testing
 var template = "foo{{blah{{blah}}ba{{}}r}}blob{{doo}}bob",
     data = {
         bl: {
@@ -182,7 +185,7 @@ var template = "foo{{blah{{blah}}ba{{}}r}}blob{{doo}}bob",
     };
 
 
-// node.js
+// node.js debugging
 var print = require('sys').print;
 _ = print;
 
