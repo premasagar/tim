@@ -82,11 +82,11 @@ var tim = (function(){
         return template;
     }
 
-    function iterateThroughTokens(template, iterator){
+    function iterateThroughTokens(template){
         var posFirstOpen = template.indexOf(start),
             posLastClose = 0,
-            nextCloseToken,
             nextOpenToken,
+            nextCloseToken,
             tokensOpen = 0,
             token;
         
@@ -98,18 +98,18 @@ var tim = (function(){
         
         function nestedToken(){
             while (tokensOpen){
-                nextOpenToken = token.indexOf(end);
-                nextCloseToken = token.indexOf(start);
+                nextOpenToken = token.indexOf(start);
+                nextCloseToken = token.indexOf(end);
                 
-                if (nextCloseToken >= 0 && nextCloseToken < nextOpenToken){
+                if (nextOpenToken >= 0 && nextOpenToken < nextCloseToken){
                     tokensOpen ++;
-                    token = token.slice(nextCloseToken + startLength);
-                    posLastClose += nextCloseToken + startLength;
+                    token = token.slice(nextOpenToken + startLength);
+                    posLastClose += nextOpenToken + startLength;
                 }
-                else if (nextOpenToken >= 0){
+                else if (nextCloseToken >= 0){
                     tokensOpen --;
-                    token = token.slice(nextOpenToken + endLength);
-                    posLastClose += nextOpenToken + endLength;
+                    token = token.slice(nextCloseToken + endLength);
+                    posLastClose += nextCloseToken + endLength;
                 }
                 else { // unmatched closing braces
                     break;
@@ -117,14 +117,18 @@ var tim = (function(){
             }
 
             // if we've found a full token
-            if (nextOpenToken >= 0){
+            if (nextCloseToken >= 0){
                 token = template.slice(posFirstOpen + startLength, posLastClose - endLength);
                 token = applyPlugins(token);
                 template = template.slice(0, posFirstOpen) + token + template.slice(posLastClose);
                 // run again, for next token
-                return iterateThroughTokens(template, nestedToken);
+                return iterateThroughTokens(template);
             }
             return template;
+        }
+        
+        function sandwichedToken(){
+            var nextOpenToken = token.indexOf(start);
         }
         
         return nestedToken();
