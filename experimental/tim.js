@@ -128,10 +128,15 @@ var tim = (function(){
         }
         
         function sandwichedToken(){
-            var nextOpenToken = token.indexOf(start);
+            if (tokensOpen){
+                nextOpenToken = token.indexOf(start);
+                nextCloseToken = token.indexOf(end);
+            }
+            return token.slice(0, nextCloseToken);
         }
         
-        return nestedToken();
+        //return nestedToken();
+        return sandwichedToken();
     }
 
     tim = function(template, data){    
@@ -195,10 +200,11 @@ var template = "foo{{blah{{blah}}ba{{}}r}}blob{{doo}}bob",
 
 // node.js debugging
 var print = require('sys').print;
-_ = print;
+_ = function(arg){
+    print(arg.toString() + "\n");
+};
 
 _(tim(template, data));
-_("\n");
 //////////////////////
 
 
