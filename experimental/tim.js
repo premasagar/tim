@@ -82,11 +82,11 @@ var tim = (function(){
         return template;
     }
 
-    function nextToken(template){
+    function iterateThroughTokens(template, iterator){
         var posFirstOpen = template.indexOf(start),
             posLastClose = 0,
-            posOpen,
-            posClose,
+            nextCloseToken,
+            nextOpenToken,
             tokensOpen = 0,
             token;
         
@@ -96,38 +96,42 @@ var tim = (function(){
             posLastClose += posFirstOpen + startLength;
         }
         
-        while (tokensOpen){
-            posClose = token.indexOf(end);
-            posOpen = token.indexOf(start);
-            
-            if (posOpen >= 0 && posOpen < posClose){
-                tokensOpen ++;
-                token = token.slice(posOpen + startLength);
-                posLastClose += posOpen + startLength;
+        function nestedToken(){
+            while (tokensOpen){
+                nextOpenToken = token.indexOf(end);
+                nextCloseToken = token.indexOf(start);
+                
+                if (nextCloseToken >= 0 && nextCloseToken < nextOpenToken){
+                    tokensOpen ++;
+                    token = token.slice(nextCloseToken + startLength);
+                    posLastClose += nextCloseToken + startLength;
+                }
+                else if (nextOpenToken >= 0){
+                    tokensOpen --;
+                    token = token.slice(nextOpenToken + endLength);
+                    posLastClose += nextOpenToken + endLength;
+                }
+                else { // unmatched closing braces
+                    break;
+                }
             }
-            else if (posClose >= 0){
-                tokensOpen --;
-                token = token.slice(posClose + endLength);
-                posLastClose += posClose + endLength;
-            }
-            else { // unmatched closing braces
-                break;
-            }
-        }
 
-        // if we've found a full token
-        if (posClose >= 0){
-            token = template.slice(posFirstOpen + startLength, posLastClose - endLength);
-            token = applyPlugins(token);
-            template = template.slice(0, posFirstOpen) + token + template.slice(posLastClose);
-            // run again, for next token
-            return nextToken(template);
+            // if we've found a full token
+            if (nextOpenToken >= 0){
+                token = template.slice(posFirstOpen + startLength, posLastClose - endLength);
+                token = applyPlugins(token);
+                template = template.slice(0, posFirstOpen) + token + template.slice(posLastClose);
+                // run again, for next token
+                return iterateThroughTokens(template, nestedToken);
+            }
+            return template;
         }
-        return template;
+        
+        return nestedToken();
     }
 
     tim = function(template, data){    
-        return nextToken(template);
+        return iterateThroughTokens(template);
     };
     
     tim.plugin = function(regex, fn, priority){
