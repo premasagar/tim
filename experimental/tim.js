@@ -83,17 +83,17 @@ var tim = (function(){
     }
 
     function iterateThroughTokens(template){
-        var posFirstOpen = template.indexOf(start),
-            posLastClose = 0,
+        var firstToken = template.indexOf(start),
+            lastToken = 0,
             nextOpenToken,
             nextCloseToken,
             tokensOpen = 0,
             token;
         
-        if (posFirstOpen >= 0){
+        if (firstToken >= 0){
             tokensOpen ++;
-            token = template.slice(posFirstOpen + startLength);
-            posLastClose += posFirstOpen + startLength;
+            token = template.slice(firstToken + startLength);
+            lastToken += firstToken + startLength;
         }
         
         function nestedToken(){
@@ -104,12 +104,12 @@ var tim = (function(){
                 if (nextOpenToken >= 0 && nextOpenToken < nextCloseToken){
                     tokensOpen ++;
                     token = token.slice(nextOpenToken + startLength);
-                    posLastClose += nextOpenToken + startLength;
+                    lastToken += nextOpenToken + startLength;
                 }
                 else if (nextCloseToken >= 0){
                     tokensOpen --;
                     token = token.slice(nextCloseToken + endLength);
-                    posLastClose += nextCloseToken + endLength;
+                    lastToken += nextCloseToken + endLength;
                 }
                 else { // unmatched closing braces
                     break;
@@ -118,9 +118,9 @@ var tim = (function(){
 
             // if we've found a full token
             if (nextCloseToken >= 0){
-                token = template.slice(posFirstOpen + startLength, posLastClose - endLength);
+                token = template.slice(firstToken + startLength, lastToken - endLength);
                 token = applyPlugins(token);
-                template = template.slice(0, posFirstOpen) + token + template.slice(posLastClose);
+                template = template.slice(0, firstToken) + token + template.slice(lastToken);
                 // run again, for next token
                 return iterateThroughTokens(template);
             }
