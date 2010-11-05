@@ -81,9 +81,17 @@ var tim = (function(){
         }
         return template;
     }
+    
+    function getNextOpenToken(template){
+        return template.indexOf(start);
+    }
+    
+    function getNextCloseToken(template){
+        return token.indexOf(end);
+    }
 
     function iterateThroughTokens(template){
-        var firstToken = template.indexOf(start),
+        var firstToken = getNextOpenToken(template),
             lastToken = 0,
             nextOpenToken,
             nextCloseToken,
@@ -98,8 +106,8 @@ var tim = (function(){
         
         function nestedToken(){
             while (tokensOpen){
-                nextOpenToken = token.indexOf(start);
-                nextCloseToken = token.indexOf(end);
+                nextOpenToken = getNextOpenToken(token);
+                nextCloseToken = getNextCloseToken(token);
                 
                 if (nextOpenToken >= 0 && nextOpenToken < nextCloseToken){
                     tokensOpen ++;
@@ -128,11 +136,16 @@ var tim = (function(){
         }
         
         function sandwichedToken(){
+            var openingToken, contents;
+            
             if (tokensOpen){
-                nextOpenToken = token.indexOf(start);
-                nextCloseToken = token.indexOf(end);
+                nextOpenToken = getNextOpenToken(token);
+                nextCloseToken = getNextCloseToken(token);
             }
-            return token.slice(0, nextCloseToken);
+            openingToken = token.slice(0, nextCloseToken);
+            remainder = token.slice(nextCloseToken + endLength);
+            nextNextOpenToken = getNextOpenToken(remainder);
+            contents = contents.slice(0, getNextOpenToken(token)
         }
         
         //return nestedToken();
@@ -160,7 +173,7 @@ var tim = (function(){
 // Add plugins
 
 // Dot notation
-tim.plugin(/^[a-z0-9_][\.a-z0-9_]*$/g, function(template){
+tim.plugin(/^[a-z0-9_][\.a-z0-9_]*$/, function(template){
     var path = template.split("."),
         len = path.length,
         lookup = data,
@@ -207,4 +220,6 @@ _ = function(arg){
 _(tim(template, data));
 //////////////////////
 
+// {{foo: lorem {{example}} lorem {{example.bar}} lorem}}
+// {{foo}}lorem {{bar}} {{example}} lorem {{example.bar}} {{/bar}} lorem {{/foo}}
 
