@@ -115,9 +115,9 @@ To change this, edit the `starts` and `ends` vars in the code.
 ## Embedding micro-templates within an HTML document
 A little known aspect of browser parsing of HTML documents is that if a document contains a `<script>` tag that has a non-standard `type` attribute, then the browser will not attempt to parse that script element. However, JavaScript can still access the contents of the element. This leads us to a very useful coding pattern:
 
-in the HTML, add a script tag with a non-standard type, e.g. "`tim`:
+in the HTML, add a script tag with a non-standard type, e.g. "`text/tim`:
 
-    <script type="tim" id="foo">
+    <script type="text/tim" id="foo">
         <p><a href='{{url}}'>{{title}}</a></p>
     </script>
     
