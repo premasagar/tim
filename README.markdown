@@ -142,16 +142,16 @@ Working in this way brings some sanity back to application development, where yo
 It also makes your code more maintainable - the markup templates can live with the rest of the static markup on a page, where the markup coder can access it, and the JavaScript logic lives in an entirely
 different place.
 
-### Another example
-This time, using class names on the script element, and jQuery:
+### Another example: using class names
+This time, using class names on the script element, and a little jQuery:
 
     <!-- HTML -->
-    <script type="tim" class="foo">
+    <script type="text/tim" class="foo">
         <p><a href='{{url}}'>{{title}}</a></p>
     </script>
     
     /* JavaScript */
-    var template = jQuery("script[type=tim].foo").html(),
+    var template = jQuery("script[type=text/tim].foo").html(),
         data = {
             title: "Dharmafly",
             url:   "http://dharmafly.com"
@@ -160,6 +160,23 @@ This time, using class names on the script element, and jQuery:
     jQuery("#bar").html(
         tim(template, data)
     );
+
+### Another example: caching your micro-templates
+E.g. by looping through all the template elements:
+
+    <!-- HTML -->
+    <script type="text/tim" class="foo">
+        <p><a href='{{url}}'>{{title}}</a></p>
+    </script>
+    
+    /* JavaScript */
+    var templates = {}; // template cache object
+    
+    jQuery("script[type=text/tim]).each(function(){
+        templates[this.className] = this.innerHTML;
+    });
+    
+    tim(templates.foo, data);
 
 ## Feedback
 Do you have any issues, questions or suggestions, or are you finding Tim useful in one of your projects? See [github.com/premasagar/tim/issues](http://github.com/premasagar/tim/issues), or get in touch ([@premasagar](http://twitter.com/premasagar)).
