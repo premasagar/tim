@@ -172,7 +172,7 @@ E.g. by looping through all the template elements:
     /* JavaScript */
     var templates = {}; // template cache object
     
-    jQuery("script[type=text/tim]).each(function(){
+    jQuery("script[type=text/tim]").each(function(){
         templates[this.className] = this.innerHTML;
     });
     
