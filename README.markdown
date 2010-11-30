@@ -79,7 +79,7 @@ This is easily achieved:
     tim(ul, {list: myList});
     // "<ul><li>100</li><li>101</li><li>102</li></ul>"
     
-_(NOTE: It's under consideration whether to include a terse syntax for Tim for iterating over array elements, in a loop. Watch this space)._
+_(NOTE: An expanded version of Tim is in the works. It includes a syntax for iterating over objects and arrays. Watch this space)._
         
 
 ## Debugging
@@ -177,6 +177,9 @@ E.g. by looping through all the template elements:
     });
     
     tim(templates.foo, data);
+
+## Future development
+Some future developments, for an expanded version of Tim includes support for loops, and custom plugins.
 
 ## Feedback
 Do you have any issues, questions or suggestions, or are you finding Tim useful in one of your projects? See [github.com/premasagar/tim/issues](http://github.com/premasagar/tim/issues), or get in touch ([@premasagar](http://twitter.com/premasagar)).
