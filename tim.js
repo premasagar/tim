@@ -25,10 +25,10 @@
 */
 
 var tim = (function(){
-    var starts  = "{{",
-        ends    = "}}",
+    var start  = "{{",
+        end    = "}}",
         path    = "[a-z0-9_][\\.a-z0-9_]*", // e.g. config.person.name
-        pattern = new RegExp(starts + "("+ path +")" + ends, "gi"),
+        pattern = new RegExp(start + "("+ path +")" + end, "gi"),
         undef;
     
     return function(template, data){
