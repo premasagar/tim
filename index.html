@@ -3,17 +3,71 @@
 <head><title>Tim</title></head>
 
 <body>
-    <h1><a href="http://github.com/premasagar/tim">Tim</a></h1>
-    <p>This document includes <a href="http://github.com/premasagar/tim">tim-dom.js</a>, for testing via the browser console. Useful examples are yet to come...</p>
+    <h1><a href=http://github.com/premasagar/tim>Tim</a></h1>
+    <p>This document includes a variant of <a href=http://github.com/premasagar/tim>Tim</a>, and has some micro-templates in the HTML for testing.</p>
+    
+    <p><em>View the HTML source</em> and open your browser console (e.g. Firebug, WebKit Developer Tools) to see what's going on.</p>
 
-    <script type=text/tim class=hi>
-        Hi, {{name}}.
+    <!-- MICRO-TEMPLATES -->
+    <script type=text/tim class=helloPerson>
+        Hi, {{name}}. I'm Tim.
     </script>
 
-    <script type=text/tim class=static>Some text</script>
+    <script type=text/tim class=staticText>
+        Remember the milk.
+    </script>
 
-    <script type=text/tim data-tim=test-attr>A test</script>
+    <script type=text/tim data-tim=myAttrTest>
+        data-* attributes are {{adj}}!
+    </script>
 
-    <script src="tim-dom.js"></script>
+    <script type=text/tim+erb class=myErbTest>
+        ERB is <% adj %>!
+    </script>
+
+
+    <!-- SCRIPTING -->
+    <!-- First, include tim.js or a variant (it doesn't matter if this is at the top of document or not) -->
+    <script src=tim-dom.js></script>
+    
+    <!-- Then, use it -->
+    <script>
+        if (console){
+            // A simple call to Tim, supplying the template as a string
+            console.log(
+                tim("Inline templates are {{adj}}.", {adj:"ace"})
+            );
+        
+            /////
+    
+            // Referencing a micro-template in the document's HTML
+            console.log(
+                tim("helloPerson", {name:"Bob"})
+            );
+            
+            /////
+            
+            // Referencing a simple text template, without data substitution
+            console.log(
+                tim("staticText")
+            );
+            
+            /////
+            
+            // Changing the script element's attribute to lookup the template name
+            var myTim = tim({attr:"data-tim"});
+            console.log(
+                myTim("myAttrTest", {adj:"terrific"})
+            );
+            
+            /////
+        
+            // Changing the script element's type and the start/end delimiters in the template
+            var erb = tim({type:"text/tim+erb", start:"<%", end:"%>"});
+            console.log(
+                erb("myErbTest", {adj:"lovely"})
+            );
+        }
+    </script>
 </body>
 </html>

@@ -24,13 +24,15 @@
         
 */
 
-var tim = (function(){
-    var start  = "{{",
-        end    = "}}",
-        path    = "[a-z0-9_][\\.a-z0-9_]*", // e.g. config.person.name
-        pattern = new RegExp(start + "("+ path +")" + end, "gi"),
-        type = "text/tim",
-        attr = "className",
+var tim = (function init(settings){
+    settings = settings || {};
+
+    var start = settings.start || "{{",
+        end = settings.end || "}}",
+        path = settings.path || "[a-z0-9_][\\.a-z0-9_]*", // e.g. config.person.name
+        type = settings.type || "text/tim",
+        attr = settings.attr || "class",
+        pattern = new RegExp(start + "(\\s*("+ path +")\\s*)" + end, "gi"),
         templates,
         undef;
         
@@ -61,33 +63,7 @@ var tim = (function(){
     function tim(template, data){
         var settings, templateLookup;
         
-        switch(typeof template){
-            case "object":
-                settings = template;
-                if (settings.start){
-                    start = settings.start;
-                }
-                if (settings.end){
-                    end = settings.end;
-                }
-                if (settings.path){
-                    path = settings.path;
-                }
-                if (settings.type){
-                    type = settings.type;
-                }
-                if (settings.attr){
-                    attr = settings.attr;
-                }
-                pattern = new RegExp(start + "("+ path +")" + end, "gi");
-            return tim(true);
-            
-            case "undefined":
-            return getTemplate();
-            
-            case "boolean":
-            return getTemplate(template); // if true, then template will re-cache from DOM
-            
+        switch(typeof template){            
             case "string":
             // Set new template
             if (typeof data === "string"){
@@ -113,7 +89,7 @@ var tim = (function(){
             }
             
             // Merge the data into the template string
-            return template.replace(pattern, function(tag, ref){
+            return template.replace(pattern, function(tag, match, ref){
                 var path = ref.split("."),
                     len = path.length,
                     dataLookup = data,
@@ -134,6 +110,15 @@ var tim = (function(){
                     }
                 }
             });
+            
+            case "undefined":
+            return getTemplate();
+            
+            case "object":
+            return init(template);
+            
+            case "boolean":
+            return getTemplate(template); // if true, then template will re-cache from DOM
         }
     }       
     return tim;
