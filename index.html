@@ -28,12 +28,10 @@
 
     <!-- SCRIPTING -->
     <!-- First, include tim.js or a variant (it doesn't matter if this is at the top of document or not) -->
-    <script src=tim-dom.js></script>
+    <script src=tim.js></script>
     
     <!-- Then, use it -->
     <script>
-        tim.fromDom();
-    
         if (console){
             // A simple call to Tim, supplying the template as a string
             console.log(
@@ -57,7 +55,7 @@
             /////
             
             // Changing the script element's attribute to lookup the template name
-            tim.fromDom({attr:"data-tim"});
+            tim.dom({attr:"data-tim"});
             console.log(
                 tim("myAttrTest", {adj:"terrific"})
             );
@@ -66,7 +64,6 @@
         
             // Changing the script element's type and the start/end delimiters in the template
             var erb = tim({type:"text/tim+erb", start:"<%", end:"%>"});
-            erb.fromDom();
             console.log(
                 erb("myErbTest", {adj:"lovely"})
             );
