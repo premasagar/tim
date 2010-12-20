@@ -1,11 +1,10 @@
-"use strict";
-
 /*!
 * Tim
 *   github.com/premasagar/tim
 *
 *//*
     A tiny, secure JavaScript micro-templating script.
+*//*
 
     by Premasagar Rose
         dharmafly.com
@@ -22,68 +21,61 @@
         
     v0.3.0
         
-*/
+*//*global window */
 
 var tim = (function init(settings){
-    settings = settings || {};
-
-    var start = settings.start || "{{",
-        end = settings.end || "}}",
-        path = settings.path || "[a-z0-9_][\\.a-z0-9_]*", // e.g. config.person.name
-        type = settings.type || "text/tim",
-        attr = settings.attr || "class",
-        pattern = new RegExp(start + "(\\s*("+ path +")\\s*)" + end, "gi"),
-        templates,
-        undef;
-        
-    function getTemplate(key){
-        var document = window.document,
-            elements, elem, i, hasQuerySelector, attrValue;
+    "use strict";
     
-        // Cache templates - can be forced with boolean true as arg
-        if (!templates || key === true){
-            templates = {};
-            hasQuerySelector = !!document.querySelectorAll;
-        
-            elements = hasQuerySelector ?
-                document.querySelectorAll("script[type='" + type + "']") :
-                document.getElementsByTagName("script");
-                
-            for (i = elements.length; i; i--){
-                elem = elements[i-1];
-                attrValue = elem.getAttribute(attr);
-                if (attrValue && hasQuerySelector || elements[elem.type] === type){
-                    templates[attrValue] = elem.innerHTML;
+    settings = settings || {};
+    var start = settings.start || "{{",
+        end   = settings.end   || "}}",
+        path  = settings.path  || "[a-z0-9_][\\.a-z0-9_]*", // e.g. config.person.name
+        _templateCache = settings.templates || {},
+        pattern = new RegExp(start + "(\\s*("+ path +")\\s*)" + end, "gi"),
+        undef;
+    
+    function templateCache(key, value){
+        var t;
+    
+        switch (typeof key){
+            case "string":
+                if (typeof value === "undefined"){
+                    return _templateCache[key];
                 }
-            }
+                _templateCache[key] = value;
+            break;
+            
+            case "undefined":
+            return _templateCache;
+            
+            case "object":
+                for (t in key){
+                    if (key.hasOwnProperty(t)){
+                        _templateCache[t] = key[t];
+                    }
+                }
+            break;
         }
-        return typeof key === "string" ? templates[key] : templates;
     }
     
     function tim(template, data){
-        var settings, templateLookup;
-        
         switch(typeof template){            
             case "string":
             // Set new template
             if (typeof data === "string"){
-                templates[template] = data;
-                return getTemplate();
+                return templateCache(template, data);
             }
             
             // When no template tags are found in template, use as identifier for template in HTML script element
             if (template.indexOf(start) < 0){
-                templateLookup = getTemplate(template);
-                if (templateLookup){
-                    template = templateLookup;
-                    
-                    // A lookup on an HTML template
-                    if (typeof data === "undefined"){
-                        return template;
-                    }
+                template = templateCache(template);
+                
+                if (!template){
+                    return "";
                 }
-                else {
-                    // No template tags, no HTML template found. Just return.
+                                   
+                // Lookup a cached template
+                if (typeof data === "undefined"){
                     return template;
                 }
             }
@@ -112,14 +104,39 @@ var tim = (function init(settings){
             });
             
             case "undefined":
-            return getTemplate();
+            return templateCache();
             
             case "object":
             return init(template);
-            
-            case "boolean":
-            return getTemplate(template); // if true, then template will re-cache from DOM
         }
-    }       
+    }
+    tim.settings = settings;
+    
+    tim.fromDom = function(domSettings){
+        domSettings = domSettings || {};
+        
+        var type = domSettings.type || tim.settings.type || "text/tim",
+            attr = domSettings.attr || tim.settings.attr || "class",
+            document = window.document,
+            hasQuery = !!document.querySelectorAll,
+            elements = hasQuery ?
+                document.querySelectorAll(
+                    "script[type='" + type + "']"
+                ) :
+                document.getElementsByTagName("script"),
+            i = elements.length,
+            elem, attrValue;
+            
+        for (; i; i--){
+            elem = elements[i-1];
+            attrValue = elem.getAttribute(attr);
+            if (attrValue && hasQuery || elements[elem.type] === type){
+                tim(attrValue, elem.innerHTML);
+            }
+        }
+    };
+    
     return tim;
 }());
+
+/*jslint browser: true, onevar: true, undef: true, eqeqeq: true, bitwise: true, regexp: true, newcap: true, immed: true, strict: true */

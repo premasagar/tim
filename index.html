@@ -32,6 +32,8 @@
     
     <!-- Then, use it -->
     <script>
+        tim.fromDom();
+    
         if (console){
             // A simple call to Tim, supplying the template as a string
             console.log(
@@ -55,15 +57,16 @@
             /////
             
             // Changing the script element's attribute to lookup the template name
-            var myTim = tim({attr:"data-tim"});
+            tim.fromDom({attr:"data-tim"});
             console.log(
-                myTim("myAttrTest", {adj:"terrific"})
+                tim("myAttrTest", {adj:"terrific"})
             );
             
             /////
         
             // Changing the script element's type and the start/end delimiters in the template
             var erb = tim({type:"text/tim+erb", start:"<%", end:"%>"});
+            erb.fromDom();
             console.log(
                 erb("myErbTest", {adj:"lovely"})
             );
