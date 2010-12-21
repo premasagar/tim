@@ -30,7 +30,16 @@ ERB is <% adj %>, btw.
 
 
 <!-- SCRIPTING -->
-<!-- First, include tim.js or a variant (it doesn't matter if this is at the top of document or not) -->
+<script>
+    // for debugging
+    if (console && console.log){
+        var _ = function(){
+            console.log.apply(console, arguments);
+        };
+    }
+</script>
+
+<!-- Include tim.js or a variant (it doesn't matter if this is at the top of document or not) -->
 <script src=tim.js></script>
 
 <!-- Then, use it -->

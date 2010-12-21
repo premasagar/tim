@@ -32,7 +32,7 @@ var tim = (function createTim(initSettings){
             path : "[a-z0-9_][\\.a-z0-9_]*" // e.g. config.person.name
         },
         templates = {},
-        initFunctions = [],
+        filters = {},
         pattern, initialized, undef;
         
         
@@ -118,21 +118,54 @@ var tim = (function createTim(initSettings){
         return templates;
     }
     
-    // Allow plugins to initialise on first run
-    function initPlugin(fn){
-        initFunctions.push(fn);
+    
+    /////
+    
+    
+    // FILTERS    
+    function sortByPriority(a, b){
+        return a[1] - b[1];
+    }
+    
+    // Add filter to the stack
+    function addFilter(filterName, fn, priority){
+        var fns = filters[filterName];
+        if (!fns){
+            fns = filters[filterName] = [];
+        }
+        fns.push([fn, priority || 0]);
+        fns.sort(sortByPriority);
         return fn;
     }
     
-    // On first run, call plugin init functions
-    function firstRun(){
-        initialized = 1;
-        
-        for(var i = 0, len = initFunctions.length; i < len; i++){
-            initFunctions[i]();
+    function applyFilter(filterName, payload){
+        var fns = filters[filterName],
+            args, i, len, response;
+            
+        if (fns){
+            args = [];
+            i = 1;
+            len = arguments.length;            
+            for (; i < len; i++){
+                args.push(arguments[i]);
+            }
+            
+            i = 0;
+            len = fns.length;
+            for (; i < len; i++){
+                response = fns[i][0].apply(this, args);
+                if (response !== undef){
+                    payload = response;
+                }
+            }
         }
-        // Clean up
-        initFunctions = null;
+        return payload;
+    }
+    
+    // Router for adding and applying filters, for Tim API
+    function filter(filterName, payload){
+        return (typeof payload === "function" ? addFilter : applyFilter)
+            .apply(this, arguments);
     }
     
     
@@ -141,8 +174,10 @@ var tim = (function createTim(initSettings){
     
     // Wrapper function
     function tim(template, data){
+        // On first run, call init plugins
         if (!initialized){
-            firstRun();
+            initialized = 1;        
+            applyFilter("init");
         }
     
         if (typeof template === "string"){
@@ -155,25 +190,7 @@ var tim = (function createTim(initSettings){
         
         if (template && data !== undef){
             template = template.replace(pattern, function(tag, token){
-                // Use dotSyntax to parse a data object for substitutions
-                var path = token.split("."),
-                    len = path.length,
-                    dataLookup = data,
-                    i = 0;
-
-                for (; i < len; i++){
-                    dataLookup = dataLookup[path[i]];
-                    
-                    // Property not found
-                    if (dataLookup === undef){
-                        throw "tim: '" + path[i] + "' not found" + (i ? " in " + tag : "");
-                    }
-                    
-                    // Return the required value
-                    if (i === len - 1){
-                        return dataLookup;
-                    }
-                }
+                return applyFilter("token", token, data, template);
             });
         }
         return template || "";
@@ -188,8 +205,34 @@ var tim = (function createTim(initSettings){
     // Create new Tim function, based on supplied settings, if any
     tim.parser = createTim;
     
-    // Allow plugins to set an init handler that is called on first run
-    tim.init = initPlugin;
+    // Add new filters and trigger existing ones
+    tim.filter = filter;
+    
+    
+    /////
+    
+    
+    // dotSyntax default plugin: uses dot syntax to parse a data object for substitutions
+    addFilter("token", function(token, data, template){
+        var path = token.split("."),
+            len = path.length,
+            dataLookup = data,
+            i = 0;
+
+        for (; i < len; i++){
+            dataLookup = dataLookup[path[i]];
+            
+            // Property not found
+            if (dataLookup === undef){
+                throw "tim: '" + path[i] + "' not found" + (i ? " in " + tag : "");
+            }
+            
+            // Return the required value
+            if (i === len - 1){
+                return dataLookup;
+            }
+        }
+    });
     
     
     /////
@@ -199,7 +242,7 @@ var tim = (function createTim(initSettings){
     // This block of code can be removed if unneeded - e.g. with server-side JS
     // Default: <script type="text/tim" class="foo">{{TEMPLATE}}</script>
     if (window && window.document){
-        tim.dom = initPlugin(function(domSettings){
+        tim.dom = addFilter("init", function(domSettings){
             domSettings = domSettings || {};
             
             var type = domSettings.type || settings.type || "text/tim",
