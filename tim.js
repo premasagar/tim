@@ -33,7 +33,7 @@ var tim = (function createTim(initSettings){
         },
         templates = {},
         filters = {},
-        pattern, initialized, undef;
+        stopThisFilter, pattern, initialized, undef;
         
         
     /////
@@ -143,8 +143,8 @@ var tim = (function createTim(initSettings){
             args, i, len, response;
             
         if (fns){
-            args = [];
-            i = 1;
+            args = [payload];
+            i = 2;
             len = arguments.length;            
             for (; i < len; i++){
                 args.push(arguments[i]);
@@ -153,9 +153,14 @@ var tim = (function createTim(initSettings){
             i = 0;
             len = fns.length;
             for (; i < len; i++){
+                args[0] = payload;
                 response = fns[i][0].apply(this, args);
-                if (response !== undef){
+                if (payload !== undef && response !== undef){
                     payload = response;
+                }
+                if (stopThisFilter){
+                    stopThisFilter = false;
+                    break;
                 }
             }
         }
@@ -167,6 +172,9 @@ var tim = (function createTim(initSettings){
         return (typeof payload === "function" ? addFilter : applyFilter)
             .apply(this, arguments);
     }
+    filter.stop = function(){
+        stopThisFilter = true;
+    };
     
     
     /////
@@ -242,7 +250,7 @@ var tim = (function createTim(initSettings){
     // This block of code can be removed if unneeded - e.g. with server-side JS
     // Default: <script type="text/tim" class="foo">{{TEMPLATE}}</script>
     if (window && window.document){
-        tim.dom = addFilter("init", function(domSettings){
+        tim.dom = function(domSettings){
             domSettings = domSettings || {};
             
             var type = domSettings.type || settings.type || "text/tim",
@@ -269,6 +277,10 @@ var tim = (function createTim(initSettings){
             
             templatesCache(templatesInDom);
             return templatesInDom;
+        };
+        
+        addFilter("init", function(){
+            tim.dom();
         });
     }
     
