@@ -91,7 +91,7 @@ var tim = (function createTim(initSettings){
         switch (typeof key){
             case "string":
                 if (value === undef){
-                    return templates[key];
+                    return templates[key] || "";
                 }
                 else if (value === false){
                     delete templates[key];
@@ -182,26 +182,33 @@ var tim = (function createTim(initSettings){
     
     // Wrapper function
     function tim(template, data){
+        var templateLookup;
+    
         // On first run, call init plugins
         if (!initialized){
             initialized = 1;        
             applyFilter("init");
         }
     
-        if (typeof template === "string"){
-            // No template tags found in template
-            if (template.indexOf(settings.start) < 0){
-                // Is this a key for a cached template?
-                template = templatesCache(template);
+        // No template tags found in template
+        if (template.indexOf(settings.start) < 0){
+            // Is this a key for a cached template?
+            templateLookup = templatesCache(template);
+            if (templateLookup){
+                template = templateLookup;
             }
         }
+        template = applyFilter("template", template);
         
+        // Substitute tokens in template
         if (template && data !== undef){
             template = template.replace(pattern, function(tag, token){
                 return applyFilter("token", token, data, template);
             });
         }
-        return template || "";
+        
+        template = applyFilter("templateAfter", template);
+        return template;
     }
     
     // Get and set settings, e.g. tim({attr:"id"});
