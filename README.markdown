@@ -2,7 +2,7 @@
 
 A tiny, secure JavaScript micro-templating script.
 
-Tim lets you write simple templates that uses JavaScript's familiar dot notation. You pass in a JavaScript object that contains all the relevant strings, and they are then substited into the template. For example:
+Tim lets you write simple templates that uses JavaScript's familiar dot notation. You pass in a JavaScript object that contains all the relevant strings, and they are then substituted into the template. For example:
 
     tim("Hello {{place}}", {place: "world"});
     // "Hello world"
@@ -10,7 +10,7 @@ Tim lets you write simple templates that uses JavaScript's familiar dot notation
 * by [Premasagar Rose](http://premasagar.com) 
     ([Dharmafly](http://dharmafly.com))
 * source: [github.com/premasagar/tim](http://github.com/premasagar/tim) ([MIT license](http://opensource.org/licenses/mit-license.php))
-* 219 bytes minified & gzipped
+* ~200 bytes minified & gzipped
 
 
 ## Why is micro-templating useful?
@@ -27,6 +27,8 @@ Yuck. There's no need to do this. Simply prepare a JavaScript object with the re
 It is safe and secure: it doesn't use eval or (new Function), so it cannot execute malicious code. As such, it can be used in secure widgets and apps that disallow eval - e.g. Adobe Air sandboxes, AdSafe ads, etc.
 
 It doesn't include a whole bloat load of features that are unlikely to get used when you just want to get some simple templating up and running.
+
+It comes in two versions: "lite" (which is tiny), and "standard", which has advanced functionality and allows extensibility with plugins.
 
 It's easy to debug.
 
@@ -79,7 +81,7 @@ This is easily achieved:
     tim(ul, {list: myList});
     // "<ul><li>100</li><li>101</li><li>102</li></ul>"
     
-_(NOTE: An expanded version of Tim is in the works. It includes a syntax for iterating over objects and arrays. Watch this space)._
+_(NOTE: Baked in support for iterating over objects and arrays is on its way. Watch this space)._
         
 
 ## Debugging
@@ -87,10 +89,6 @@ If your template references a path in the data object that could not actually be
 
     tim("Hello {{config.foo.bar}}", {config: {moo: "blah"}});
     // tim: 'foo' not found in {{config.foo.bar}}
-
-If you want to save precious few bytes, and you are certain that your templates will never fail, then feel free to rip out this block:
-
-    if (lookup === undef){ [...] }
 
 
 ## Using arrays
@@ -179,7 +177,7 @@ E.g. by looping through all the template elements:
     tim(templates.foo, data);
 
 ## Future development
-Some future developments, for an expanded version of Tim includes support for loops, and custom plugins.
+Some future developments include support for loops and custom plugins.
 
 ## Feedback
 Do you have any issues, questions or suggestions, or are you finding Tim useful in one of your projects? See [github.com/premasagar/tim/issues](http://github.com/premasagar/tim/issues), or get in touch ([@premasagar](http://twitter.com/premasagar)).

@@ -21,11 +21,11 @@ Hi, {{name}}. I'm Tim.
 </script>
 
 <script type=text/tim data-tim=myAttrTest>
-data-* attributes are {{adj}}!
+data-* attributes are utterly {{adj}}.
 </script>
 
 <script type=text/tim+erb class=myErbTest>
-ERB is <% adj %>!
+ERB is <% adj %>, btw.
 </script>
 
 
@@ -70,7 +70,7 @@ ERB is <% adj %>!
 
 
     // Change the template's start/end delimiters and the target script element type
-    var erb = tim({start:"<%", end:"%>", type:"text/tim+erb"});
+    var erb = tim.parser({start:"<%", end:"%>", type:"text/tim+erb"});
     log += erb("myErbTest", {adj:"lovely"});
     
     /* NOTE: the above could have been written as:

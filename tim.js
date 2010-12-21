@@ -18,23 +18,105 @@
         tim
 
     **
-        
+
     v0.3.0
-        
+
 *//*global window */
 
-var tim = (function createTim(settings){
+var tim = (function createTim(initSettings){
     "use strict";
     
-    settings = settings || {};
-    var start = settings.start || "{{",
-        end   = settings.end   || "}}",
-        path  = settings.path  || "[a-z0-9_][\\.a-z0-9_]*", // e.g. config.person.name
-        templates = settings.templates || {},
-        pattern = new RegExp(start + "\\s*("+ path +")\\s*" + end, "gi"),
-        isFirstRun = 1,
+    var settings = {
+            start: "{{",
+            end  : "}}",
+            path : "[a-z0-9_][\\.a-z0-9_]*" // e.g. config.person.name
+        },
+        templates = {},
         initFunctions = [],
-        undef;
+        pattern, initialized, undef;
+        
+        
+    /////
+    
+
+    // Update cached regex pattern
+    function patternCache(){
+        pattern = new RegExp(settings.start + "\\s*("+ settings.path +")\\s*" + settings.end, "gi");
+    }
+    
+    // settingsCache: Get and set settings
+    /*
+        Example usage:
+        settingsCache(); // get settings object
+        settingsCache({start:"<%", end:"%>", attr:"id"}); // set new settings
+    */
+    function settingsCache(newSettings){
+        var s;
+    
+        if (newSettings){
+            for (s in newSettings){
+                if (newSettings.hasOwnProperty(s)){
+                    settings[s] = newSettings[s];
+                }
+            }
+            patternCache();
+        }
+        return settings;
+    }
+        
+    // Apply custom settings
+    if (initSettings){
+        settingsCache(initSettings);
+    }
+    else {
+        patternCache();
+    }
+    
+    
+    /////
+    
+    
+    // templatesCache: Get and set the templates cache object
+    /*
+        Example usage:
+        templatesCache("foo"); // get template named "foo"
+        templatesCache("foo", "bar"); // set template named "foo" to "bar"
+        templatesCache("foo", false); // delete template named "foo"
+        templatesCache({foo:"bar", blah:false}); // set multiple templates
+        templatesCache(false); // delete all templates
+    */
+    function templatesCache(key, value){
+        var t;
+    
+        switch (typeof key){
+            case "string":
+                if (value === undef){
+                    return templates[key];
+                }
+                else if (value === false){
+                    delete templates[key];
+                }
+                else {
+                    templates[key] = value;
+                }
+            break;
+            
+            case "object":
+                for (t in key){
+                    if (key.hasOwnProperty(t)){
+                        templatesCache(t, key[t]);
+                    }
+                }
+            break;
+            
+            case "boolean":
+            if (!key){
+                templates = {};
+            }
+            break;
+        }
+        return templates;
+    }
     
     // Allow plugins to initialise on first run
     function initPlugin(fn){
@@ -43,65 +125,38 @@ var tim = (function createTim(settings){
     }
     
     // On first run, call plugin init functions
-    function firstRunInit(){
-        isFirstRun = 0;
+    function firstRun(){
+        initialized = 1;
         
         for(var i = 0, len = initFunctions.length; i < len; i++){
             initFunctions[i]();
         }
+        // Clean up
+        initFunctions = null;
     }
     
-    // Get and set to the templates cache object
-    function templateCache(key, value){
-        var t;
     
-        switch (typeof key){
-            case "string":
-                if (value === undef){
-                    return templates[key];
-                }
-                templates[key] = value;
-            break;
-            
-            case "undefined":
-            return templates;
-            
-            case "object":
-                for (t in key){
-                    if (key.hasOwnProperty(t)){
-                        templates[t] = key[t];
-                    }
-                }
-            break;
-        }
-    }
+    /////
     
-    // Main function
+    
+    // Wrapper function
     function tim(template, data){
-        if (isFirstRun){
-            firstRunInit();
+        if (!initialized){
+            firstRun();
         }
     
-        switch(typeof template){            
-            case "string":
-            // Cache a new template
-            if (typeof data === "string"){
-                return templateCache(template, data);
-            }
-            
+        if (typeof template === "string"){
             // No template tags found in template
-            if (template.indexOf(start) < 0){
+            if (template.indexOf(settings.start) < 0){
                 // Is this a key for a cached template?
-                template = templateCache(template);
-                                
-                if (!template || data === undef){
-                    return template;
-                }
+                template = templatesCache(template);
             }
-            
-            // Merge data into the template string
-            return template.replace(pattern, function(tag, ref){
-                var path = ref.split("."),
+        }
+        
+        if (template && data !== undef){
+            template = template.replace(pattern, function(tag, token){
+                // Use dotSyntax to parse a data object for substitutions
+                var path = token.split("."),
                     len = path.length,
                     dataLookup = data,
                     i = 0;
@@ -111,7 +166,7 @@ var tim = (function createTim(settings){
                     
                     // Property not found
                     if (dataLookup === undef){
-                        throw "tim: '" + path[i] + "' not found in " + tag;
+                        throw "tim: '" + path[i] + "' not found" + (i ? " in " + tag : "");
                     }
                     
                     // Return the required value
@@ -120,51 +175,59 @@ var tim = (function createTim(settings){
                     }
                 }
             });
-            
-            case "undefined":
-            // Return cached templates
-            return templateCache();
-            
-            case "object":
-            // Create new Tim function, based on new settings
-            return createTim(template);
         }
+        return template || "";
     }
     
-    // Settings object. Should be considered read-only. If you need to change the settings, create a new Tim function, e.g. tim = tim({attr:"id"});
-    tim.settings = settings;
+    // Get and set settings, e.g. tim({attr:"id"});
+    tim.settings = settingsCache;
+    
+    // Get and set cached templates
+    tim.templates = templatesCache;
+    
+    // Create new Tim function, based on supplied settings, if any
+    tim.parser = createTim;
     
     // Allow plugins to set an init handler that is called on first run
     tim.init = initPlugin;
     
+    
     /////
     
+    
     // Dom plugin: finds micro-templates in <script>'s in the DOM
-    // Can be removed if unneeded - e.g. with server-side JS
+    // This block of code can be removed if unneeded - e.g. with server-side JS
     // Default: <script type="text/tim" class="foo">{{TEMPLATE}}</script>
-    tim.dom = initPlugin(function(domSettings){
-        domSettings = domSettings || {};
-        
-        var type = domSettings.type || settings.type || "text/tim",
-            attr = domSettings.attr || settings.attr || "class",
-            document = window.document,
-            hasQuery = !!document.querySelectorAll,
-            elements = hasQuery ?
-                document.querySelectorAll(
-                    "script[type='" + type + "']"
-                ) :
-                document.getElementsByTagName("script"),
-            i = elements.length,
-            elem, attrValue;
+    if (window && window.document){
+        tim.dom = initPlugin(function(domSettings){
+            domSettings = domSettings || {};
             
-        for (; i; i--){
-            elem = elements[i-1];
-            attrValue = elem.getAttribute(attr);
-            if (attrValue && hasQuery || elements[elem.type] === type){
-                tim(attrValue, elem.innerHTML);
+            var type = domSettings.type || settings.type || "text/tim",
+                attr = domSettings.attr || settings.attr || "class",
+                document = window.document,
+                hasQuery = !!document.querySelectorAll,
+                elements = hasQuery ?
+                    document.querySelectorAll(
+                        "script[type='" + type + "']"
+                    ) :
+                    document.getElementsByTagName("script"),
+                i = 0,
+                len = elements.length,
+                elem, key,
+                templatesInDom = {};
+                
+            for (; i < len; i++){
+                elem = elements[i];
+                key = elem.getAttribute(attr);
+                if (key && hasQuery || elements[elem.type] === type){
+                    templatesInDom[key] = elem.innerHTML;
+                }
             }
-        }
-    });
+            
+            templatesCache(templatesInDom);
+            return templatesInDom;
+        });
+    }
     
     return tim;
 }());

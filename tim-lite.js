@@ -1,5 +1,5 @@
 /*!
-* Tim
+* Tim (lite)
 *   github.com/premasagar/tim
 *
 *//*
@@ -19,7 +19,7 @@
 
     **
         
-    v0.2.1
+    v0.3.0
         
 */
 
@@ -34,8 +34,8 @@ var tim = (function(){
     
     return function(template, data){
         // Merge data into the template string
-        return template.replace(pattern, function(tag, ref){
-            var path = ref.split("."),
+        return template.replace(pattern, function(tag, token){
+            var path = token.split("."),
                 len = path.length,
                 lookup = data,
                 i = 0;
