@@ -13,19 +13,23 @@
 
 <!-- MICRO-TEMPLATES -->
 <script type=text/tim class=staticText>
-Mary had a little lamb.
+Ground Control to Major Tom.
 </script>
 
 <script type=text/tim class=helloPerson>
 Hi, {{name}}. I'm Tim.
 </script>
 
+<script type=text/tim class=loops>
+Some nice fruit: {{fruit}}{{colour}} {{name}}, {{/fruit}}etc.
+</script>
+
 <script type=text/tim data-tim=myAttrTest>
-data-* attributes are utterly {{adj}}.
+data-* attributes are {{words.modifier}} {{words.adj}}.
 </script>
 
 <script type=text/tim+erb class=myErbTest>
-ERB is <% adj %>, btw.
+ERB is also <% adj %>, btw.
 </script>
 
 
@@ -50,7 +54,7 @@ ERB is <% adj %>, btw.
     
 
     // A simple call to Tim, supplying the template as a string
-    log += tim("Inline templates are {{adj}}.", {adj:"useful"});
+    log += tim("Inline templates are {{desc}}.", {desc:"quick & easy"});
     
     
     /////
@@ -68,11 +72,18 @@ ERB is <% adj %>, btw.
     
     
     /////
+
+
+    // Loops
+    log += tim("loops", {fruit:[{name:"apples", colour:"green"}, {name:"plums", colour: "red"}, {name:"bananas", colour:"yellow"}]});
+    
+    
+    /////
     
     
     // Change the target script element attribute
     tim.dom({attr:"data-tim"});
-    log += tim("myAttrTest", {adj:"terrific"});
+    log += tim("myAttrTest", {words:{modifier:"really", adj:"useful"}});
     
     
     /////

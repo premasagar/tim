@@ -23,6 +23,11 @@
 
 *//*global window */
 
+/*
+    TODO:
+    * a way to prevent a delimiter (e.g. ", ") appearing last in a loop template
+*/
+
 var tim = (function createTim(initSettings){
     "use strict";
     
@@ -118,6 +123,16 @@ var tim = (function createTim(initSettings){
         return templates;
     }
     
+    function extend(obj1, obj2){
+        var key;
+        for (key in obj2){
+            if (obj2.hasOwnProperty(key)){
+                obj1[key] = obj2[key];
+            }
+        }
+        return obj1;
+    }
+    
     
     /////
     
@@ -140,7 +155,7 @@ var tim = (function createTim(initSettings){
     
     function applyFilter(filterName, payload){
         var fns = filters[filterName],
-            args, i, len, response;
+            args, i, len, substituted;
             
         if (fns){
             args = [payload];
@@ -154,9 +169,9 @@ var tim = (function createTim(initSettings){
             len = fns.length;
             for (; i < len; i++){
                 args[0] = payload;
-                response = fns[i][0].apply(this, args);
-                if (payload !== undef && response !== undef){
-                    payload = response;
+                substituted = fns[i][0].apply(null, args);
+                if (payload !== undef && substituted !== undef){
+                    payload = substituted;
                 }
                 if (stopThisFilter){
                     stopThisFilter = false;
@@ -170,7 +185,7 @@ var tim = (function createTim(initSettings){
     // Router for adding and applying filters, for Tim API
     function filter(filterName, payload){
         return (typeof payload === "function" ? addFilter : applyFilter)
-            .apply(this, arguments);
+            .apply(null, arguments);
     }
     filter.stop = function(){
         stopThisFilter = true;
@@ -180,7 +195,60 @@ var tim = (function createTim(initSettings){
     /////
     
     
-    // Wrapper function
+    // Merge data into template
+    /*  
+        // simpler alternative, without support for iteration:
+        template = template.replace(pattern, function(tag, token){
+            return applyFilter("token", token, data, template);
+        });
+    */
+    function substitute(template, data){
+        var match, tag, token, substituted, startPos, endPos, templateStart, templateEnd, subTemplate, closeToken, closePos, key, loopData, loop;
+    
+        while((match = pattern.exec(template)) !== null) {
+            token = match[1];
+            substituted = applyFilter("token", token, data, template);
+            startPos = match.index;
+            endPos = pattern.lastIndex;
+            templateStart = template.slice(0, startPos);
+            templateEnd = template.slice(endPos);
+            
+            if (typeof substituted !== "object"){
+                template = templateStart + substituted + templateEnd;
+            }
+            else {
+                subTemplate = "";
+                closeToken = settings.start + "/" + token + settings.end;
+                closePos = templateEnd.indexOf(closeToken);
+                
+                if (closePos >= 0){
+                    templateEnd = templateEnd.slice(0, closePos);
+                    for (key in substituted){
+                        if (substituted.hasOwnProperty(key)){
+                            pattern.lastIndex = 0;
+                            
+                            // Allow {{_key}} in templates
+                            loopData = extend({_key:key}, substituted[key]);
+                            loopData = applyFilter("loopData", loopData, loop, token);
+                            loop = tim(templateEnd, loopData);
+                            subTemplate += applyFilter("loop", loop, token, loopData);
+                        }
+                    }
+                    subTemplate = applyFilter("loopEnd", subTemplate, token, loopData);
+                    template = templateStart + subTemplate + template.slice(endPos + templateEnd.length + closeToken.length);
+                }
+                else {
+                    throw "tim: '" + token + "' not closed";
+                }
+            }
+            
+            pattern.lastIndex = 0;
+        }
+        return template;
+    }
+    
+    
+    // TIM - MAIN FUNCTION
     function tim(template, data){
         var templateLookup;
     
@@ -189,6 +257,7 @@ var tim = (function createTim(initSettings){
             initialized = 1;        
             applyFilter("init");
         }
+        template = applyFilter("templateBefore", template);
     
         // No template tags found in template
         if (template.indexOf(settings.start) < 0){
@@ -202,9 +271,7 @@ var tim = (function createTim(initSettings){
         
         // Substitute tokens in template
         if (template && data !== undef){
-            template = template.replace(pattern, function(tag, token){
-                return applyFilter("token", token, data, template);
-            });
+            template = substitute(template, data);
         }
         
         template = applyFilter("templateAfter", template);
@@ -220,7 +287,7 @@ var tim = (function createTim(initSettings){
     // Create new Tim function, based on supplied settings, if any
     tim.parser = createTim;
     
-    // Add new filters and trigger existing ones
+    // Add new filters and trigger existing ones. Use tim.filter.stop() during processing, if required.
     tim.filter = filter;
     
     
@@ -228,7 +295,7 @@ var tim = (function createTim(initSettings){
     
     
     // dotSyntax default plugin: uses dot syntax to parse a data object for substitutions
-    addFilter("token", function(token, data, template){
+    addFilter("token", function(token, data, tag){
         var path = token.split("."),
             len = path.length,
             dataLookup = data,
