@@ -26,6 +26,7 @@
 /*
     TODO:
     * a way to prevent a delimiter (e.g. ", ") appearing last in a loop template
+    * Sorted constructor for auto-sorting arrays - used for parsers -> two parsers are added, one for identifying and parsing single-tokens and one for open/close tokens - the parsers then create two new Sorted instance, one for single-token plugins and one for open/close token plugins
 */
 
 var tim = (function createTim(initSettings){
