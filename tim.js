@@ -202,6 +202,7 @@ var tim = (function createTim(initSettings){
             return applyFilter("token", token, data, template);
         });
     */
+    // TODO: all an array to be passed to tim(), so that the template is called for each element in it
     function substitute(template, data){
         var match, tag, token, substituted, startPos, endPos, templateStart, templateEnd, subTemplate, closeToken, closePos, key, loopData, loop;
     
@@ -227,8 +228,8 @@ var tim = (function createTim(initSettings){
                         if (substituted.hasOwnProperty(key)){
                             pattern.lastIndex = 0;
                             
-                            // Allow {{_key}} in templates
-                            loopData = extend({_key:key}, substituted[key]);
+                            // Allow {{_key}} and {{_content}} in templates
+                            loopData = extend({_key:key, _content:substituted[key]}, substituted[key]);
                             loopData = applyFilter("loopData", loopData, loop, token);
                             loop = tim(templateEnd, loopData);
                             subTemplate += applyFilter("loop", loop, token, loopData);
