@@ -1,5 +1,5 @@
 /*!
-* Tim (lite)
+* Tim (lite, cached)
 *   github.com/premasagar/tim
 *
 *//*
@@ -19,7 +19,7 @@
 
     **
         
-    v0.3.0
+    v0.3.1
         
 */
 
@@ -30,9 +30,11 @@ var tim = (function(){
         end     = "}}",
         path    = "[a-z0-9_][\\.a-z0-9_]*", // e.g. config.person.name
         pattern = new RegExp(start + "\\s*("+ path +")\\s*" + end, "gi"),
+        cache   = {},
+        JSON    = window.JSON,
         undef;
     
-    return function(template, data){
+    function tim(template, data){
         // Merge data into the template string
         return template.replace(pattern, function(tag, token){
             var path = token.split("."),
@@ -44,9 +46,11 @@ var tim = (function(){
                 lookup = lookup[path[i]];
                 
                 // Property not found
+                /*
                 if (lookup === undef){
                     throw "tim: '" + path[i] + "' not found in " + tag;
                 }
+                */
                 
                 // Return the required value
                 if (i === len - 1){
@@ -54,5 +58,20 @@ var tim = (function(){
                 }
             }
         });
-    };
+    }
+    
+    return JSON ?
+        function(template, data){
+            var stringified  = JSON.stringify(data), // NOTE: requires stringifiable data
+                cachedResult = cache[template] && cache[template][stringified];
+                
+            if (cachedResult){
+                return cachedResult;
+            }
+            if (!cache[template]){
+                cache[template] = {};
+            }
+            cachedResult = cache[template][stringified] = tim(template, data);
+            return cachedResult;
+        } : tim;
 }());
