@@ -20,10 +20,6 @@ Ground Control to Major Tom.
 Hi, {{name}}. I'm Tim.
 </script>
 
-<script type=text/tim class=loops>
-Some nice fruit: {{fruit}}{{colour}} {{name}}, {{/fruit}}etc.
-</script>
-
 <script type=text/tim data-tim=myAttrTest>
 data-* attributes are {{words.modifier}} {{words.adj}}.
 </script>
@@ -32,6 +28,20 @@ data-* attributes are {{words.modifier}} {{words.adj}}.
 ERB is also <% adj %>, btw.
 </script>
 
+<!-- Note: Boolean usage is not tim-lite compatible -->
+<script type="text/tim" class="bool">
+{{isWeekend}}
+  {{day}}
+{{/isWeekend}}
+</script>
+
+<!-- Note: Array iteration is not tim-lite compatible -->
+<script type="text/tim" class="loops">
+Some nice fruit: 
+{{fruit}}
+  {{colour}} {{name}}, 
+{{/fruit}}
+</script>
 
 <!-- SCRIPTING -->
 <script>
@@ -74,13 +84,6 @@ ERB is also <% adj %>, btw.
     /////
 
 
-    // Loops
-    log += tim("loops", {fruit:[{name:"apples", colour:"green"}, {name:"plums", colour: "red"}, {name:"bananas", colour:"yellow"}]});
-    
-    
-    /////
-    
-    
     // Change the target script element attribute
     tim.dom({attr:"data-tim"});
     log += tim("myAttrTest", {words:{modifier:"really", adj:"useful"}});
@@ -99,6 +102,21 @@ ERB is also <% adj %>, btw.
     */
     
     /////
+    
+    // note: this is not tim-lite compatible
+    tim.templates("foo", "Cached templates are {{word}}"); // set template named "foo"
+    var foo = tim.templates("foo"); // get template named "foo"
+    log += tim(foo, {word:"useful"});
+    
+    /////
+    
+    // note: this is not tim-lite compatible
+    log+= tim("bool", {isWeekend:true,  day:"Sunday"});
+    log+= tim("bool", {isWeekend:true,  day:"Saturday"});
+    log+= tim("bool", {isWeekend:false, day:"Thursday"});    
+    
+    // note: this is not tim-lite compatible
+    log += tim("loops", {fruit:[{ name:"apple",  colour:"green"  },{ name:"orange", colour:"orange" },{ name:"banana", colour:"yellow" }]});
     
     document.getElementById("console").innerHTML = log;
 </script>

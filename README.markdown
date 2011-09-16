@@ -35,7 +35,13 @@ It's easy to debug.
 For these reasons, it is now in use in Sqwidget, the JavaScript widget library: [github.com/premasagar/sqwidget](http://github.com/premasagar/sqwidget)
 
 
-## Usage
+## Tim & Tim Lite: Core Functionality
+There are two versions of Tim: the "standard" (full) version, and a stripped down "lite" version.  The core functionality of both versions is identical, and is described below.  
+
+
+Tim can be used to replace tokens within a text string with specified data.
+
+For example: 
 
     var template = "Hello {{place}}. My name is {{person.name}}.",
         data = {
@@ -65,7 +71,7 @@ For example:
 ...and so on, all the way up to a full-blown HTML document.
 
 
-## Nested templates
+### Nested templates
 Sometimes, you will want to reuse the same template multiple times in a loop, and then wrapped within a bigger template - e.g. when creating an HTML `<ul>` list tag.
 
 This is easily achieved:
@@ -84,14 +90,14 @@ This is easily achieved:
 _(NOTE: Baked in support for iterating over objects and arrays is on its way. Watch this space)._
         
 
-## Debugging
+### Debugging
 If your template references a path in the data object that could not actually be found, then Tim will throw an error, to help with debugging:
 
     tim("Hello {{config.foo.bar}}", {config: {moo: "blah"}});
     // tim: 'foo' not found in {{config.foo.bar}}
 
 
-## Using arrays
+### Using arrays
 The data can be, or can include, an array. Use dot notation to access the array elements.
 
 e.g:
@@ -105,12 +111,12 @@ or:
     // "Hello world"
 
 
-## Changing the {{curly braces}} delimiter
+### Changing the {{curly braces}} delimiter
 By default, template tags are delimited by "`{{`" and "`}}`" tokens.
 To change this, edit the `start` and `end` vars in the code.
 
 
-## Embedding micro-templates within an HTML document
+### Embedding micro-templates within an HTML document
 A little known aspect of browser parsing of HTML documents is that if a document contains a `<script>` tag that has a non-standard `type` attribute, then the browser will not attempt to parse that script element. However, JavaScript can still access the contents of the element. This leads us to a very useful coding pattern:
 
 in the HTML, add a script tag with a non-standard type, e.g. "`text/tim`:
@@ -175,6 +181,99 @@ E.g. by looping through all the template elements:
     });
     
     tim(templates.foo, data);
+
+
+## Tim: Additional Functionality
+The following methods are also available within the full version of Tim.
+
+
+### Templates
+Templates can be cached and retrieved by Tim:
+
+    tim.templates("foo");                   // get template named "foo"
+    tim.templates("foo", "bar");            // set template named "foo" to "bar"
+    tim.templates("foo", false);            // delete template named "foo"
+    tim.templates({foo:"bar", blah:false}); // set/delete multiple templates
+    tim.templates(false);                   // delete all templates
+
+An example use of this:
+
+    tim.templates("foo", "Cached templates are {{word}}");  // set template named "foo"
+    var foo = tim.templates("foo");                         // get template named "foo"
+    tim(foo, {word:"useful"});
+    // Cached templates are useful
+    
+Caching templates is more efficient than parsing a template every time it is used.
+
+When using Tim on the client-side, it automatically caches all templates it finds in the DOM that match the pattern `<script type="text/tim" class="TEMPLATE_ID">`.  In this way, calling `tim("TEMPLATE_ID", data)` is a shortcut for templates embedded in the DOM.
+
+
+### Updating the default settings
+It is possible to update Tim's default settings such as the template type, and start/end string delineators - *{{* and *}}*
+
+This allows you to parse micro-templates containing different types of data, such as:
+
+    <script type="text/tim+erb" id="myErbTest">
+       ERB is also <% adj %>, btw.
+    </script>
+
+To parse this:
+
+    // Change the template's start/end delimiters and the target script element type
+    var erb = tim.parser({start:"<%", end:"%>", type:"text/tim+erb"});
+    erb("myErbTest", {adj:"lovely"});
+    // ERB is also lovely, btw.
+
+
+### targeting templates
+Rather than targeting micro-templates via their class/id, or by their type attribute, it is also possible to specify the DOM attribute with which to target templates, such as data-*.  
+
+The following template:
+
+    <script type="text/tim" data-tim="myAttrTest">
+        data-* attributes are {{words.modifier}} {{words.adj}}.
+    </script>
+
+Can be targeted by changing the target attribute:
+
+    tim.dom({attr:"data-tim"});
+    tim("myAttrTest", {words:{modifier:"really", adj:"useful"}});
+    // data-* attributes are really useful 
+
+
+### use of boolean conditionals
+Tim supports the use of boolean conditionals, to allow you to only output part of a template based on the value of a passed parameter.
+
+    <script type="text/tim" class="bool">
+        {{isWeekend}}
+          {{day}}
+        {{/isWeekend}}
+    </script>
+    
+The parameter {{day}} will only be output if isWeekend is true:
+
+    tim("bool", {isWeekend:true,  day:"Sunday"});   // outputs: Sunday
+    tim("bool", {isWeekend:false, day:"Thursday"}); // no output
+    tim("bool", {isWeekend:true,  day:"Saturday"}); // outputs: Saturday
+
+### iterating through arrays
+Tim can be passed an array, which it will iterate through.  
+
+    <script type="text/tim" class="loops">
+        Some fruit: 
+        {{fruit}}
+          {{name}} are {{colour}},
+        {{/fruit}}
+    </script>
+    
+In this example, Tim will iterate through the array *fruit*, and add to its output each time:
+    
+    tim("loops", {fruit:[
+      { name:"apples",  colour:"green"  },
+      { name:"oranges", colour:"orange" },
+      { name:"bananas", colour:"yellow" }
+    ]});
+    // apples are green, oranges are orange, bananas are yellow,
 
 ## Future development
 Some future developments include support for loops and custom plugins.
