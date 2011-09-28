@@ -86,8 +86,6 @@ This is easily achieved:
     }
     tim(ul, {list: myList});
     // "<ul><li>100</li><li>101</li><li>102</li></ul>"
-    
-_(NOTE: Baked in support for iterating over objects and arrays is on its way. Watch this space)._
         
 
 ### Debugging
@@ -109,6 +107,8 @@ or:
 
     tim("Hello {{places.0}}", {places: ["world"]});
     // "Hello world"
+    
+Further examples are discussed in the section "iterating through arrays" below.
 
 
 ### Changing the {{curly braces}} delimiter
@@ -275,8 +275,26 @@ In this example, Tim will iterate through the array *fruit*, and add to its outp
     ]});
     // apples are green, oranges are orange, bananas are yellow,
 
-## Future development
-Some future developments include support for loops and custom plugins.
+### iterating over objects
+Tim can also be passed an object, through which it can iterate.
+
+    <script type="text/tim" class="objects">
+    Object iteration: 
+      {{things}}
+        {{_key}} are {{_content}}, 
+      {{/things}}
+    </script>
+
+In this example, Tim will iterate through the object *things*, using the keywords *_key* and *_content* to access object properties
+
+    tim("objects", {things:{ 
+      roses:"red", 
+      violets:"blue", 
+      dogs:"green", 
+      oranges:"round"
+    }});
+    // roses are red, violets are blue, dogs are green, oranges are round, 
+    
 
 ## Feedback
 Do you have any issues, questions or suggestions, or are you finding Tim useful in one of your projects? See [github.com/premasagar/tim/issues](http://github.com/premasagar/tim/issues), or get in touch ([@premasagar](http://twitter.com/premasagar)).

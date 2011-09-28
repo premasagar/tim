@@ -43,6 +43,16 @@ Some nice fruit:
 {{/fruit}}
 </script>
 
+
+<!-- Note: Object iteration is not tim-lite compatible -->
+<script type="text/tim" class="objects">
+Object iteration: 
+  {{things}}
+    {{_key}} are {{_content}}, 
+  {{/things}}
+</script>
+
+
 <!-- SCRIPTING -->
 <script>
     // for debugging
@@ -117,6 +127,9 @@ Some nice fruit:
     
     // note: this is not tim-lite compatible
     log += tim("loops", {fruit:[{ name:"apple",  colour:"green"  },{ name:"orange", colour:"orange" },{ name:"banana", colour:"yellow" }]});
+    
+    // note: this is not tim-lite compatible
+    log += tim("objects", {things:{ roses:"red", violets:"blue", dogs:"green", oranges:"round" }});
     
     document.getElementById("console").innerHTML = log;
 </script>
