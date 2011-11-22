@@ -1,0 +1,137 @@
+<!doctype html>
+<html>
+<head><title>Tim</title></head>
+
+<body>
+<h1><a href=http://github.com/premasagar/tim>Tim</a></h1>
+<p>This document includes <a href=http://github.com/premasagar/tim>tim.js</a>, and contains micro-templates in the HTML for testing.</p>
+
+<h2>Output</h2>
+<p><em>View the HTML source</em> to see what's going on.</p>
+<pre><code id=console></code></pre>
+    
+
+<!-- MICRO-TEMPLATES -->
+<script type=text/tim class=staticText>
+Ground Control to Major Tom.
+</script>
+
+<script type=text/tim class=helloPerson>
+Hi, {{name}}. I'm Tim.
+</script>
+
+<script type=text/tim data-tim=myAttrTest>
+data-* attributes are {{words.modifier}} {{words.adj}}.
+</script>
+
+<script type=text/tim+erb class=myErbTest>
+ERB is also <% adj %>, btw.
+</script>
+
+<!-- Note: Boolean usage is not compatible with tinytim.js -->
+<script type="text/tim" class="bool">
+{{isWeekend}}
+  {{day}}
+{{/isWeekend}}
+</script>
+
+<!-- Note: Array iteration is not compatible with tinytim.js -->
+<script type="text/tim" class="loops">
+Some nice fruit: 
+{{fruit}}
+  {{colour}} {{name}}, 
+{{/fruit}}
+</script>
+
+
+<!-- Note: Object iteration is not compatible with tinytim.js -->
+<script type="text/tim" class="objects">
+Object iteration: 
+  {{things}}
+    {{_key}} are {{_content}}, 
+  {{/things}}
+</script>
+
+
+<!-- SCRIPTING -->
+<script>
+    // for debugging
+    if (console && console.log){
+        var _ = function(){
+            console.log.apply(console, arguments);
+        };
+    }
+</script>
+
+<!-- Include tim.js or a variant (it doesn't matter if this is at the top of document or not) -->
+<script src=tim.js></script>
+
+<!-- Then, use it -->
+<script>
+    var log = "";
+        
+    /////
+    
+
+    // A simple call to Tim, supplying the template as a string
+    log += tim("Inline templates are {{desc}}.", {desc:"quick & easy"});
+    
+    
+    /////
+    
+    
+    // Referencing a simple text template, without data substitution
+    log += tim("staticText");
+    
+
+    /////
+
+
+    // Referencing a micro-template in the document's HTML
+    log += tim("helloPerson", {name:"Bob"});
+    
+    
+    /////
+
+
+    // Change the target script element attribute
+    tim.dom({attr:"data-tim"});
+    log += tim("myAttrTest", {words:{modifier:"really", adj:"useful"}});
+    
+    
+    /////
+
+
+    // Change the template's start/end delimiters and the target script element type
+    var erb = tim.parser({start:"<%", end:"%>", type:"text/tim+erb"});
+    log += erb("myErbTest", {adj:"lovely"});
+    
+    /* NOTE: the above could have been written as:
+    var erb = tim({start:"<%", end:"%>"});
+    erb.dom({type:"text/tim+erb"});
+    */
+    
+    /////
+    
+    // (not compatible with tinytim.js)
+    tim.templates("foo", "Cached templates are {{word}}"); // set template named "foo"
+    var foo = tim.templates("foo"); // get template named "foo"
+    log += tim(foo, {word:"useful"});
+    
+    /////
+    
+    // (not compatible with tinytim.js)
+    log+= tim("bool", {isWeekend:true,  day:"Sunday"});
+    log+= tim("bool", {isWeekend:true,  day:"Saturday"});
+    log+= tim("bool", {isWeekend:false, day:"Thursday"});    
+    
+    // (not compatible with tinytim.js)
+    log += tim("loops", {fruit:[{ name:"apple",  colour:"green"  },{ name:"orange", colour:"orange" },{ name:"banana", colour:"yellow" }]});
+    
+    // (not compatible with tinytim.js)
+    log += tim("objects", {things:{ roses:"red", violets:"blue", dogs:"green", oranges:"round" }});
+    
+    document.getElementById("console").innerHTML = log;
+</script>
+</body>
+</html>
