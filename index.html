@@ -28,14 +28,14 @@ data-* attributes are {{words.modifier}} {{words.adj}}.
 ERB is also <% adj %>, btw.
 </script>
 
-<!-- Note: Boolean usage is not tim-lite compatible -->
+<!-- Note: Boolean usage is not compatible with tinytim.js -->
 <script type="text/tim" class="bool">
 {{isWeekend}}
   {{day}}
 {{/isWeekend}}
 </script>
 
-<!-- Note: Array iteration is not tim-lite compatible -->
+<!-- Note: Array iteration is not compatible with tinytim.js -->
 <script type="text/tim" class="loops">
 Some nice fruit: 
 {{fruit}}
@@ -44,7 +44,7 @@ Some nice fruit:
 </script>
 
 
-<!-- Note: Object iteration is not tim-lite compatible -->
+<!-- Note: Object iteration is not compatible with tinytim.js -->
 <script type="text/tim" class="objects">
 Object iteration: 
   {{things}}
@@ -113,22 +113,22 @@ Object iteration:
     
     /////
     
-    // note: this is not tim-lite compatible
+    // (not compatible with tinytim.js)
     tim.templates("foo", "Cached templates are {{word}}"); // set template named "foo"
     var foo = tim.templates("foo"); // get template named "foo"
     log += tim(foo, {word:"useful"});
     
     /////
     
-    // note: this is not tim-lite compatible
+    // (not compatible with tinytim.js)
     log+= tim("bool", {isWeekend:true,  day:"Sunday"});
     log+= tim("bool", {isWeekend:true,  day:"Saturday"});
     log+= tim("bool", {isWeekend:false, day:"Thursday"});    
     
-    // note: this is not tim-lite compatible
+    // (not compatible with tinytim.js)
     log += tim("loops", {fruit:[{ name:"apple",  colour:"green"  },{ name:"orange", colour:"orange" },{ name:"banana", colour:"yellow" }]});
     
-    // note: this is not tim-lite compatible
+    // (not compatible with tinytim.js)
     log += tim("objects", {things:{ roses:"red", violets:"blue", dogs:"green", oranges:"round" }});
     
     document.getElementById("console").innerHTML = log;

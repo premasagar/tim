@@ -28,15 +28,15 @@ It is safe and secure: it doesn't use eval or (new Function), so it cannot execu
 
 It doesn't include a whole bloat load of features that are unlikely to get used when you just want to get some simple templating up and running.
 
-It comes in two versions: "lite" (which is tiny), and "standard", which has advanced functionality and allows extensibility with plugins.
+It comes in two versions: "tinytim.js" (<200kb), and "standard", which has advanced functionality and allows extensibility with plugins.
 
 It's easy to debug.
 
 For these reasons, it is now in use in Sqwidget, the JavaScript widget library: [github.com/premasagar/sqwidget](http://github.com/premasagar/sqwidget)
 
 
-## Tim & Tim Lite: Core Functionality
-There are two versions of Tim: the "standard" (full) version, and a stripped down "lite" version.  The core functionality of both versions is identical, and is described below.  
+## Tim & tinytim.js: Core Functionality
+There are two versions of Tim: the "standard" (full) version, and a stripped down "tinytim.js" version.  The core functionality of both versions is identical, and is described below.  
 
 
 Tim can be used to replace tokens within a text string with specified data.
