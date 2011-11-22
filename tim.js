@@ -25,33 +25,22 @@
 
 var tim = (function(Pluggables){
     "use strict";
-
-    // Initialise Tim
-    // this is called automatically, the first time `tim(template, data)` is called
-    function init() {
-        this.trigger("init");        
-        this.initialized = true;
-        return this.trigger("ready");
-    }
-    
-    /////
     
     // CREATE PLUGINS
     
     // For subscribing to an event
     function bind(eventType, callback, context){
         this.events.group(eventType, {
-            exec: callback,
+            fn: callback,
             context: context || this
         });
         return this;
     }
     
     // For manipulating templates, objects, etc
-    // TODO: change `exec` -> `callback` or `fn`?
-    function addParser(eventType, callback, pattern, context){
+    function plugin(eventType, callback, pattern, context){
         var plugin = {
-            exec: callback,
+            fn: callback,
             context: context || this
         };
         // `pattern` is a RegExp
@@ -83,15 +72,16 @@ var tim = (function(Pluggables){
     function parse(eventType, toTransform /* , ... arbitrary number of args ... */){
         var groups = this.parsers.groups,
             plugins = groups && groups[eventType],
-            args;
+            subset, args;
         
         if (plugins){
             args = this.toArray(arguments, 1);
             // Add boolean `stopOnFirstTransform` flag to `plugins.transform`
+            // TODO: devise a better approach for getting `plugins.transform` to execute only once, when the first transform has been applied
             args.unshift(true);
             
-            plugins = plugins.filter(toTransform);
-            toTransform = plugins.transform.apply(plugins, args);
+            subset = plugins.filter(toTransform);
+            toTransform = subset.transform.apply(subset, args);
         }
         return toTransform;
     }
@@ -111,11 +101,18 @@ var tim = (function(Pluggables){
         return template;
     }
     
-    function parseFirstRun(template, data){
-        // On first use with a template, initialise
-        tim.init.call(tim);
-        
+    // Initialise Tim on first use of `tim(template, data)`
+    function init(template, data){
+        // Change the function used for `tim.parseTemplate`
         tim.parseTemplate = parseTemplate;
+        
+        // init
+        tim.initialized = true;
+        
+        // `ready` event
+        tim.trigger("ready");
+        
+        // Parse the first template
         return tim.parseTemplate(template, data);
     }
     
@@ -169,19 +166,18 @@ var tim = (function(Pluggables){
         
         // Create plugins
         bind: bind,
-        addParser: addParser,
+        plugin: plugin,
         
         // Execute plugins
         trigger: trigger,
         parse: parse, // previously called `filter`
-        parseTemplate: parseFirstRun, // this later gets replaced with `parseTemplate`
+        parseTemplate: init, // this later gets replaced with `parseTemplate`
         
         // Remove plugins
         unbind: unbind,
         removeParser: removeParser,
 
         // Advanced                
-        init: init, // re-initialise Tim
         create: create, // create a new instance of Tim
         
         // utils
@@ -223,25 +219,10 @@ var tim = (function(Pluggables){
 
 /////
 
-// EXPERIMENTAL EXAMPLES
-
-/* try this in the browser console:
-   
-    tim(
-        "{{foo}} {{bar}} {{:foobar}} {{deep.foo}}",
-        {
-            foo:"MOO",
-            bar:"BAA",
-            deep:{
-                foo:"bling"
-            }
-        }
-    );
-   
-*/
+// PLUGINS
 
 // Top-level token parser - for single tokens
-tim.addParser("template", function(template, data, payload){
+tim.plugin("template", function(template, data, payload){
     var pattern = this.pattern,
         result, token, replacement;
         
@@ -258,14 +239,14 @@ tim.addParser("template", function(template, data, payload){
 });
 
 // Top-level data replacement, for single token parser
-tim.addParser("token", function(token, data){
+tim.plugin("token", function(token, data){
     if (token in data){
         return data[token];
     }
 });
 
 // Dot-syntax, modified from the original tinytim.js
-tim.addParser("token", function(token, data){
+tim.plugin("token", function(token, data){
     var path = token.split("."),
         len = path.length,
         lookup = data,
@@ -276,30 +257,52 @@ tim.addParser("token", function(token, data){
         
         // Property not found
         if (typeof lookup === "undefined"){
+            // Trigger an event for other plugins
+            this.trigger("failure", token, data);
             return;
         }
-        
         // Property found
         if (i === len - 1){
+            // Trigger an event for other plugins
+            this.trigger("success", token, data, lookup);
             return lookup;
         }
     }
 });
 
-tim.addParser(
+// Foobar
+tim.plugin(
     "token",
     
     // token === ":foobar"
     // arguments includes the partial tokens matched by the regex (the same sequence as expected from `token.match(regex)`
-    function(token, data, payload, regexMatch, backref1, backref2){
-        return "***" + backref1 + "~" + backref2 + "***";
+    function(token, data, payload, regexMatch, fooBackref, barBackref){
+        return payload.template +
+            "\n=>\n" +
+            "***" + fooBackref + "~" + barBackref + "***";
     },
     
     /:(foo)(bar)/
 );
 
-tim.bind("init", function(data){
-    console.log("INIT`ing. 'init?");
+
+// EVENT BINDINGS
+
+/* See browser console */
+tim.bind("ready", function(data){
+    console.log("Tim ready");
+    
+    console.log(
+        tim("{{foo}} {{bar}} {{:foobar}} {{deep.foo}}",
+            {
+                foo:"MOO",
+                bar:"BAA",
+                deep:{
+                    foo:"bling"
+                }
+            }
+        )
+    );
 });
 
 /*
@@ -308,3 +311,5 @@ tim.bind(true, function(eventType){
     console.log("event: " + eventType);
 });
 */
+
+tim("hello world", {});
