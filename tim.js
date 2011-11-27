@@ -26,31 +26,48 @@
 var tim = (function(Pluggables){
     "use strict";
     
-    // CREATE PLUGINS
+    // ADD / REMOVE PLUGINS
+    
+    // add
+    function addPluginFn(collectionName){
+        return function bind(eventType, callback, options){
+            this[collectionName].type(eventType, this.extend({
+                fn: callback,
+                context: this
+            }, options));
+            
+            return this;
+        };
+    }
+    
+    // remove
+    function removePluginFn(collectionName){
+        return function(eventType, callback){
+            var types = this[collectionName].types;
+        
+            if (types){
+                if (callback){
+                    if (types[eventType]){
+                        types[eventType].remove(callback);
+                    }
+                }
+                // No callback supplied -> remove all plugins of eventType
+                else {
+                    delete types[eventType];
+                }
+            }
+            return this;
+        };
+    }
+    
     
     // For subscribing to an event
-    function bind(eventType, callback, context){
-        this.events.group(eventType, {
-            fn: callback,
-            context: context || this
-        });
-        return this;
-    }
-    
-    // For manipulating templates, objects, etc
-    function plugin(eventType, callback, pattern, context){
-        var plugin = {
-            fn: callback,
-            context: context || this
-        };
-        // `pattern` is a RegExp
-        if (pattern){
-            plugin.match = pattern;
-        }
-        this.parsers.group(eventType, plugin);
+    var bind = addPluginFn("listeners"),
+        unbind = removePluginFn("listeners"),
         
-        return this;
-    }
+    // For manipulating templates, objects, etc
+        plugin = addPluginFn("plugins"),
+        removePlugin = removePluginFn("plugins");
     
     /////
     
@@ -59,10 +76,11 @@ var tim = (function(Pluggables){
     // Trigger an event (additional arg: payload data, optional)
     // Returns `tim` object
     function trigger(eventType, payload){
-        var plugins = this.events.groups && this.events.groups[eventType];
+        var types = this.listeners.types,
+            listeners = types && types[eventType];
         
-        if (plugins){
-            plugins.trigger(payload);
+        if (listeners){
+            listeners.trigger(payload);
         }
         return this;
     }
@@ -70,16 +88,12 @@ var tim = (function(Pluggables){
     // Transform a payload, on a specific event
     // Returns the transformed payload
     function parse(eventType, toTransform /* , ... arbitrary number of args ... */){
-        var groups = this.parsers.groups,
-            plugins = groups && groups[eventType],
+        var types = this.plugins.types,
+            plugins = types && types[eventType],
             subset, args;
         
         if (plugins){
             args = this.toArray(arguments, 1);
-            // Add boolean `stopOnFirstTransform` flag to `plugins.transform`
-            // TODO: devise a better approach for getting `plugins.transform` to execute only once, when the first transform has been applied
-            args.unshift(true);
-            
             subset = plugins.filter(toTransform);
             toTransform = subset.transform.apply(subset, args);
         }
@@ -104,13 +118,15 @@ var tim = (function(Pluggables){
     // Initialise Tim on first use of `tim(template, data)`
     function init(template, data){
         // Change the function used for `tim.parseTemplate`
-        tim.parseTemplate = parseTemplate;
+        this.parseTemplate = parseTemplate;
         
         // init
-        tim.initialized = true;
+        this.initialized = true;
         
         // `ready` event
-        tim.trigger("ready");
+        this.trigger("ready")
+            // Discard `ready` listeners; the event will not fire again
+            .unbind("ready");
         
         // Parse the first template
         return tim.parseTemplate(template, data);
@@ -118,55 +134,21 @@ var tim = (function(Pluggables){
     
     /////
     
-    // REMOVE PLUGINS
-    
-    function removePluginFn(collectionName){
-        return function(eventType, callback){
-            var groups = this[collectionName].groups;
-        
-            if (groups){
-                if (callback){
-                    if (groups[eventType]){
-                        groups[eventType].remove(callback);
-                    }
-                }
-                // No callback supplied -> remove all plugins for that eventType
-                else {
-                    delete groups[eventType];
-                }
-            }
-            return this;
-        };
-    }
-    
-    var unbind = removePluginFn("events"),
-        removeParser = removePluginFn("parsers");
-    
-    /////
-    
-    
-    // The following pattern means: "{{", followed by anything that isn't "}}", followed by "}}"
-    // TODO: make pattern more constrained?
-    function generatePattern(startToken, endToken){
-        return new RegExp(
-            startToken +
-            "\\s*((?:.(?!" +
-            endToken +
-            "))*.?)\\s*" +
-            endToken,
-            "gi"
-        );
-    }
-    
     // Tim's public API
     var api = {
         // Core settings
-        start: "{{",
-        end: "}}",
+        startToken: "{{",
+        endToken: "}}",
         
         // Create plugins
         bind: bind,
         plugin: plugin,
+        
+        /*
+        // Created on Tim construction - see `create()`
+        listeners: new Pluggables(),
+        plugins: new Pluggables(),
+        */
         
         // Execute plugins
         trigger: trigger,
@@ -175,7 +157,7 @@ var tim = (function(Pluggables){
         
         // Remove plugins
         unbind: unbind,
-        removeParser: removeParser,
+        removePlugin: removePlugin,
 
         // Advanced                
         create: create, // create a new instance of Tim
@@ -190,24 +172,16 @@ var tim = (function(Pluggables){
     
     // Create a new instance of Tim
     function create(options){
-        var instanceProps;
-        options || (options = {});
+        var instanceProps = {
+            listeners:  new Pluggables(),
+            plugins: new Pluggables()
+        };
     
         function tim(template, data){
             return tim.parseTemplate(template, data);
         }
-        
-        instanceProps = {
-            events:  new Pluggables(),
-            parsers: new Pluggables()
-        };
-        
-        api.extend(tim, api, instanceProps, options);
-        
-        // Generate the top-level token-matching regex
-        if (!options.pattern){
-            tim.pattern = generatePattern(tim.start, tim.end);
-        }
+        Pluggables.extend(tim, api, instanceProps, options);
+
         return tim;
     }
     
@@ -221,11 +195,67 @@ var tim = (function(Pluggables){
 
 // PLUGINS
 
-// Top-level token parser - for single tokens
+// Top-level token-matching regex
+tim.bind("ready",
+    function(){
+        this.pattern = new RegExp(
+            this.startToken +
+            "\\s*((?:.(?!" +
+            this.endToken +
+            "))*.?)\\s*" +
+            this.endToken,
+            "gi"
+        );
+    },
+    {priority:100}
+);
+
+// Enclosing template tags - e.g. "{{foo}} bar {{/foo}}" - (top-level parser)
+tim.plugin("template", function(template, data, payload){
+    var pattern = this.pattern, 
+        count = {}, currentCount, tagName, result, token, replacement, subtemplate, subdata;
+    
+    // Cycle through singular template tags
+    while((result = pattern.exec(template)) !== null){    
+        token = result[1];
+        currentCount = count[token] || 0;
+        
+        // Determine if this an opening tag or a closing tag
+        // Open tag
+        if (token[1] !== "/"){
+            tagName = token;
+            currentCount ++;
+        }
+        // Close tag
+        else {
+            tagName = token.slice(1);
+            currentCount --;
+        }
+        
+        // Update counter
+        count[token] = currentCount;
+        
+        if (!currentCount){
+            subtemplate = template.slice(result.index, pattern.lastIndex);
+        
+            replacement = tim(subtemplate, subdata, payload);
+        
+            // Splice the replacement into the template, if a transformation has been made
+            if (replacement !== token){
+                template = template.slice(0, result.index) + replacement + template.slice(pattern.lastIndex);
+                pattern.lastIndex += (replacement.length - result[0].length);
+            }
+        }
+    }
+    
+    return template;
+});
+
+// Singular template tags (top-level parser)
 tim.plugin("template", function(template, data, payload){
     var pattern = this.pattern,
         result, token, replacement;
-        
+    
     while((result = pattern.exec(template)) !== null){    
         token = result[1];
         replacement = this.parse("token", token, data, payload);
@@ -235,17 +265,22 @@ tim.plugin("template", function(template, data, payload){
             pattern.lastIndex += (replacement.length - result[0].length);
         }
     }
+    
     return template;
 });
 
-// Top-level data replacement, for single token parser
+
+/////
+
+
+// Basic data substitution (does not support dot-syntax)
 tim.plugin("token", function(token, data){
     if (token in data){
         return data[token];
     }
 });
 
-// Dot-syntax, modified from the original tinytim.js
+// Data substitution, allowing dot-syntax (to achieve this behaviour on its own, use tinytim.js)
 tim.plugin("token", function(token, data){
     var path = token.split("."),
         len = path.length,
@@ -258,7 +293,7 @@ tim.plugin("token", function(token, data){
         // Property not found
         if (typeof lookup === "undefined"){
             // Trigger an event for other plugins
-            this.trigger("failure", token, data);
+            this.trigger("fail", token, data);
             return;
         }
         // Property found
@@ -268,7 +303,8 @@ tim.plugin("token", function(token, data){
             return lookup;
         }
     }
-});
+}, {match:/^\s*[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*\s*$/});
+
 
 // Foobar
 tim.plugin(
@@ -277,32 +313,19 @@ tim.plugin(
     // token === ":foobar"
     // arguments includes the partial tokens matched by the regex (the same sequence as expected from `token.match(regex)`
     function(token, data, payload, regexMatch, fooBackref, barBackref){
-        return payload.template +
-            "\n=>\n" +
-            "***" + fooBackref + "~" + barBackref + "***";
+        return "***" + fooBackref + "~" + barBackref + "***";
     },
     
-    /:(foo)(bar)/
+    {match: /:(foo)(bar)/}
 );
+
 
 
 // EVENT BINDINGS
 
-/* See browser console */
+// See browser console
 tim.bind("ready", function(data){
     console.log("Tim ready");
-    
-    console.log(
-        tim("{{foo}} {{bar}} {{:foobar}} {{deep.foo}}",
-            {
-                foo:"MOO",
-                bar:"BAA",
-                deep:{
-                    foo:"bling"
-                }
-            }
-        )
-    );
 });
 
 /*
@@ -312,4 +335,16 @@ tim.bind(true, function(eventType){
 });
 */
 
-tim("hello world", {});
+
+    
+console.log(
+    tim("{{foo}} {{bar}} {{:foobar}} {{deep.foo}}",
+        {
+            foo:"MOO",
+            bar:"BAA",
+            deep:{
+                foo:"bling"
+            }
+        }
+    )
+);
