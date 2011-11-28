@@ -213,29 +213,30 @@ tim.bind("ready",
 // Enclosing template tags - e.g. "{{foo}} bar {{/foo}}" - (top-level parser)
 tim.plugin("template", function(template, data, payload){
     var pattern = this.pattern, 
-        count = {}, currentCount, tagName, result, token, replacement, subtemplate, subdata;
+        tokenCountLookup = {},
+        isOpeningTag,
+        currentCount, tagName, result, token, replacement, subtemplate, subdata;
     
     // Cycle through singular template tags
     while((result = pattern.exec(template)) !== null){    
         token = result[1];
-        currentCount = count[token] || 0;
         
         // Determine if this an opening tag or a closing tag
         // Open tag
-        if (token[1] !== "/"){
-            tagName = token;
-            currentCount ++;
+        if (token[0] !== "/"){
+            isOpeningTag = true;
         }
         // Close tag
         else {
-            tagName = token.slice(1);
-            currentCount --;
+            isOpeningTag = false;
+            token = token.slice(1);
         }
         
-        // Update counter
-        count[token] = currentCount;
+        tokenCountLookup[token] = (tokenCountLookup[token] || 0) + (isOpeningTag ? 1 : -1);
         
-        if (!currentCount){
+        // TODO: if closing tag, then find the previous opening tag - no need to count occurrences
+        
+        if (!tokenCountLookup[token]){
             subtemplate = template.slice(result.index, pattern.lastIndex);
         
             replacement = tim(subtemplate, subdata, payload);
