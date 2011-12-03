@@ -237,6 +237,7 @@ tim.plugin("template", function(template, data, payload){
         // TODO: if closing tag, then find the previous opening tag - no need to count occurrences
         
         if (!tokenCountLookup[token]){
+            debugger;
             subtemplate = template.slice(result.index, pattern.lastIndex);
         
             replacement = tim(subtemplate, subdata, payload);
@@ -339,7 +340,7 @@ tim.bind(true, function(eventType){
 
     
 console.log(
-    tim("{{foo}} {{bar}} {{:foobar}} {{deep.foo}}",
+    tim("{{a}}blah{{/a}} {{foo}} {{bar}} {{:foobar}} {{deep.foo}}",
         {
             foo:"MOO",
             bar:"BAA",
