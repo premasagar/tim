@@ -33,6 +33,7 @@ var tim = (function(Pluggables){
         return function bind(eventType, callback, options){
             this[collectionName].type(eventType, this.extend({
                 fn: callback,
+                // TODO: need way to get plugin, but also `tim`
                 context: this
             }, options));
             
@@ -218,190 +219,6 @@ window.O = function(){
     }
 };
 
-// Top-level token-matching regex
-tim.bind("ready",
-    function(){
-        this.pattern = new RegExp(
-            this.startToken +
-            "\\s*((?:.(?!" +
-            this.endToken +
-            "))*.?)\\s*" +
-            this.endToken,
-            "gi"
-        );
-    },
-    {priority:100}
-);
-
-
-
-    
-/*
-// single tokens can only be strings, numbers or functions that execute; no booleans, objects or undefined
-// If tag maps to a boolean or object, then the tag must envelope. Its closing tag is the first closing tag that isn't needed to close another opening tag. So, we need to count each open tag in sequence, working out if the data property suggests a single token or an envelope. The last opened envelope is the first one to be closed.
-
-{{foo}}                 // open (boolean)
-    {{foo}}             // open (object 1)
-        {{foo}}         // open (object 2)
-            {{foo}}     // single (string)
-        {{/foo}}        // close (object 1)
-    {{/foo}}            // close (object 2)
-{{/foo}}                // close (boolean)
-
-// envelope has to be only for objects and booleans
-
-// booleans: {{foo?}} {{/foo}}
-
-{{foo}} // if obj
-    {{?foo}} // if defined
-        {{foo}} {{foo}} {{/foo}} // obj
-    {{/?foo}}
-    
-    {{!?foo}} // if not defined
-        {{foo}} {{foo}} {{/foo}} // obj        
-    {{/!?foo}}
-    
-    {{!foo}} // if falsey
-    
-    {{/!foo}}
-{{/foo}}
-
-
-
-{{?foo}}                 // open (boolean) if not undefined
-    {{?foo}}             // open (object 1) if not undefined
-        {{?foo}}         // open (object 2) if not undefined
-            {{?foo}}     // single (string) if not undefined
-        {{/?foo}}        // close (object 1) if not undefined
-    {{/?foo}}            // close (object 2) if not undefined
-{{/?foo}}                // close (boolean) if not undefined
-
-
-could add property to data: "?foo"
-data["?foo"] = data
-then let the object property existence checker carry on
-
-
-// if first foo is object (not null) or boolean, then pass foo object (or whole object for boolean) into recursive lookup function
-
-{{foo}} ...
--> slice after first tag; counter = 1
--> look for next {{foo}} or {{/foo}}; +1 to counter for each opening foo tag, -1 for each closing foo tag, 0 for single token tag
--> when counter is 0, or end of string is reached, then that is the closing tag
-
-
-
-[
-    {
-        before: "!",
-        token: "foo",
-        after: ": bar=1"
-        inside: ["blah ", [...], " wah"]
-    }
-]
-// or use control characters to delimit a string
-
-
-
-*/
-/*
-
-
-
-var openingStartToken = this.startToken,
-    closingStartToken = this.startToken + "/",
-    endToken = this.endToken,
-    
-    openingStartTokenLength = openingStartToken.length,
-    closingStartTokenLength = closingStartToken.length,
-    endTokenLength = endToken.length,
-    
-    // {{foo}}
-    openingToken = new RegExp(
-        startToken +
-        "\\s*((?:.(?!" +
-        endToken +
-        "))*.?)\\s*" +
-        endToken,
-        "gi"
-    ),
-    
-    // {{/foo}}
-    closingToken = new RegExp(
-        startToken +
-        "\\s*\/((?:.(?!" + // TODO: remove escaping slash
-        endToken +
-        "))*.?)\\s*" +
-        endToken,
-        "gi"
-    );
-
-
-// TODO: Support backslash escaping of the startToken and endToken, e.g. "\{{" or "\}}"
-function parseEnvelopes(template, iterator){
-    var templateLength = template.length,
-        nextClosingTokenPos = template.search(closingStartToken),
-        nextOpeningTokenPos = (nextClosingTokenPos > -1) && template.search(closingStartToken),
-        
-        nextOpeningTokenMatch, token, innerTemplate;
-    
-    while (nextClosingToken > -1){
-        nextOpeningTokenMatch = template.match(openingStartToken);
-        
-        if (nextOpeningTokenMatch
-    
-        token = template;
-        posNextEndToken = template.indexOf(endToken);
-        
-        if (posNextEndToken > -1){
-            token = template.slice(currentPos + startTokenLength, posNextEndToken);
-            remainder = template.slice(posNextEndToken);
-        }
-    
-    
-        else {
-            //replacement = this.parse("token", token, data, payload);
-        
-        // Reset loop
-        currentPos = template.indexOf(startToken);
-    }
-    return template;
-}
-
-
-
-function parseEnvelopes(template){
-    // TODO: Support backslash escaping of the startToken and endToken, e.g. "\{{" or "\}}"  
-    var templateLength = template.length,
-        startToken = this.startToken,
-        endToken = this.endToken,
-        startTokenLength = startToken.length,
-        endTokenLength = endToken.length,
-        currentPos = template.indexOf(startToken),
-        //singleTokenParser = tim.plugin("single-token-parser"),
-        posNextEndToken, remainder, token;
-    
-    while (templateLength && currentPos > -1 && currentPos < templateLength){
-        //token = singleTokenParser(template, data, payload);
-        token = remainder =  "";
-        posNextEndToken = template.indexOf(endToken);
-        
-        if (posNextEndToken > -1){
-            token = template.slice(currentPos + startTokenLength, posNextEndToken);
-            remainder = template.slice(posNextEndToken);
-        }
-    
-    
-        else {
-            //replacement = this.parse("token", token, data, payload);
-        
-        // Reset loop
-        currentPos = template.indexOf(startToken);
-    }
-    return template;
-}
-
-*/
 
 // Function to generate a token-matching regular expression
 /* Options:
@@ -412,8 +229,8 @@ function parseEnvelopes(template){
     `flags`: flags for the regular expression (string, default "gi" - executes globally on the string and is case-insensitive)
     `name`: the specific name of the token (string, default is a wildcard for any text)
 */
-tim.bind("ready", function(data){
-    tim.getTokenRegex = function(options){
+tim.bind("ready", function(){
+    this.tagRegex = function(options){
         options || (options = {});
         
         return new RegExp(
@@ -445,18 +262,22 @@ tim.bind("ready", function(data){
             options.flags || "gi"
         );
     }
-}, {priority:-100});
-
-
-// Create the block parser plugin, e.g. "{{#foo}} bar {{/foo}}"
-tim.bind("ready", function(){
+    
+    //
+    
+    // Top-level tag regex
+    this.pattern = this.tagRegex();
+    
+    //
+    
+    // Create the block parser plugin, e.g. "{{#foo}} bar {{/foo}}"
     tim.plugin(
         // Transforms the top-level template
         "template",
 
         // Intercept template whenever an opening `block` tag is detected and replace the block with a sub-template
         function(template, data, payload, env){
-            // The token, from the back-reference in the plugin's `match` regular expression (see `tim.getTokenRegex({prefix: "#"})` below)
+            // The token, from the back-reference in the plugin's `match` regular expression (see `tim.tagRegex({prefix: "#"})` below)
             var matches = env.matches,
                 token = matches[1],
                 closingTag = this.startToken + "/" + token + this.endToken,
@@ -468,7 +289,7 @@ tim.bind("ready", function(){
 
             // No closing token found
             if (posClosingTokenSubtemplate === -1){
-                tim.trigger("error", this, "Missing closing token in block", subtemplate);
+                tim.trigger("error", "Missing closing token in block", this, subtemplate, arguments);
                 return;
             }
             
@@ -485,60 +306,62 @@ tim.bind("ready", function(){
         
         {
             // Only trigger when the token beings with "#"
-            match: tim.getTokenRegex({prefix: "#"}),
+            match: tim.tagRegex({prefix: "#"}),
             // Make sure this is in place before the main `template` loop
             priority: -100
         }
     );
-});
+    
+}, {priority:-100});
+
 
 tim.plugin("block", function(template, data, payload){
     var token = payload.token,
-        context = data[token];
-    
-    switch (typeof context){
-        case "object":
-        if (context !== null){
-            // TODO: call tim.parse directly?
-            return tim(template, data[token]);
-        }
-        break;
+        lookup = data[token];
+
+    if (lookup === null || lookup === false){
+        return "";
     }
+    
+    if (typeof lookup === "object"){
+        // TODO: arrays and object keys and elements
+        // iterate through array, one sub-template for each element?
+        // iterate through object?
+        return tim(template, lookup);
+    }
+        
+    // TODO: strings + numbers lookup template.cache(templateName)
 });
 
-// Singular template tags (top-level parser)
-tim.plugin(
-    "template",
+// Simple, single template tags (top-level parser)
+tim.plugin("template", function(template, data, payload){
+    var pattern = this.pattern,
+        result, token, replacement;
     
-    // TODO: how to reset pattern.lastIndex after use?
-    function(template, data, payload){
-        var pattern = this.pattern,
-            result, token, replacement;
+    while((result = pattern.exec(template)) !== null){
+        token = result[1];
+        replacement = this.parse("token", token, data, payload);
         
-        while((result = pattern.exec(template)) !== null){
-            token = result[1];
-            replacement = this.parse("token", token, data, payload);
+        if (replacement !== token){
+            template =  template.slice(0, result.index) +
+                        replacement +
+                        template.slice(pattern.lastIndex);
             
-            if (replacement !== token){
-                template =  template.slice(0, result.index) +
-                            replacement +
-                            template.slice(pattern.lastIndex);
-                
-                pattern.lastIndex += (replacement.length - result[0].length);
-            }
+            pattern.lastIndex += (replacement.length - result[0].length);
         }
-        
-        return template;
-    },
-    
-    {id:"single-token-parser"}
-);
+    }
+
+    // Reset regular expression pointer
+    pattern.lastIndex = 0;
+    return template;
+});
 
 
 /////
 
 
 // Basic data substitution (does not support dot-syntax)
+// NOT needed when the dot-syntax plugin below is present
 tim.plugin("token", function(token, data){
     if (token in data){
         return data[token];
@@ -561,7 +384,7 @@ tim.plugin(
             // Property not found
             if (typeof lookup === "undefined"){
                 // Trigger an event for other plugins
-                this.trigger("fail", token, data);
+                this.trigger("error", this, token, arguments);
                 return;
             }
             // Property found
@@ -575,6 +398,11 @@ tim.plugin(
     
     {match: /^\s*[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*\s*$/}
 );
+
+
+/////
+
+// DEMO
 
 
 // Foobar
