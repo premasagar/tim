@@ -1,5 +1,5 @@
 /*!
-* Tim (lite)
+* tinytim.js
 *   github.com/premasagar/tim
 *
 *//*
