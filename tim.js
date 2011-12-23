@@ -114,8 +114,7 @@ var tim = (function(Pluggables){
         
         if (plugins){
             args = this.toArray(arguments, 1);
-            subset = plugins.filter(toTransform);
-            toTransform = subset.transform.apply(subset, args);
+            toTransform = plugins.transform.apply(plugins, args);
         }
         return toTransform;
     }
