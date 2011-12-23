@@ -39,7 +39,7 @@ tim.bind(true, function(eventType){
 
     
 console.log(
-    tim("{{#quotes}}{{frankie}}{{/quotes}} {{foo}} {{bar}} {{:foobar}} {{deep.foo}}",
+    tim("{{#quotes}}{{frankie}}{{/quotes}} {{foo}} {{bar}} {{:foobar}} {{deep.foo}} {{#array}}{{this}}{{/array}}",
         {
             foo:"MOO",
             bar:"BAA",
