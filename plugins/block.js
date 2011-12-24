@@ -21,15 +21,16 @@ tim.plugin(
             return;
         }
         
+        // Sub-template and payload for processing the block
         subtemplate = subtemplate.slice(0, posClosingTokenSubtemplate);
+        subPayload = tim.extend({}, payload, {token: token, previousData: data});
+        
+        // Transform the sub-template with "block" parsers
+        subtemplate = tim.parse("block", subtemplate, data[token], subPayload);
+        
+        // Positions
         posClosingTokenStart = posOpeningTagEnd + posClosingTokenSubtemplate;
         posClosingTokenEnd = posClosingTokenStart + closingTag.length;
-        
-        // Convert sub-template
-        subPayload = tim.extend({}, payload, {token: token});
-        
-        // Trigger "block" parsers
-        subtemplate = tim.parse("block", subtemplate, data, subPayload);
         
         return template.slice(0, posOpeningTagStart) + subtemplate + template.slice(posClosingTokenEnd);
     },
@@ -41,22 +42,3 @@ tim.plugin(
         priority: -100
     }
 );
-
-
-tim.plugin("block", function(template, data, payload){
-    var token = payload.token,
-        lookup = data[token];
-
-    if (lookup === null || lookup === false){
-        return "";
-    }
-    
-    if (typeof lookup === "object"){
-        // TODO: arrays and object keys and elements
-        // iterate through array, one sub-template for each element?
-        // iterate through object?
-        return tim(template, lookup);
-    }
-        
-    // TODO: strings + numbers lookup template.cache(templateName)
-});

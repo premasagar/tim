@@ -1,5 +1,5 @@
 // Simple, single template tags (top-level parser)
-tim.plugin("template",function(template, data, payload){
+tim.plugin("template", function(template, data, payload){
     var tagRegex = this.tagRegex,
         result, token, replacement;
     

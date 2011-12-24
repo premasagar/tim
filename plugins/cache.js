@@ -50,6 +50,12 @@ tim.cache = (function(){
 //
 
 // Allow retrieving cached template by name, e.g. tim("foo") => "<div>{{bar}}</div>"
-tim.plugin("template", function(template){
-    return tim.cache(template);
-}, {match:/^[a-z0-9_\-]+$/i});
+tim.plugin(
+    "template",
+
+    function(template){
+        return tim.cache(template);
+    },
+
+    {match:/^[a-z0-9_\-]+$/i}
+);
