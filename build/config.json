@@ -1,0 +1,48 @@
+{
+    "JSHINT_OPTS": {
+        "onevar":  true,
+        "newcap":  true,
+        "undef":   true,
+        "browser": true,
+        "devel":   true,
+        "maxerr":  1000,
+        "indent":  4,
+        "predef": [
+            "tim",
+            "window"
+        ]
+    },
+    "JAVASCRIPT": {
+        "DIST_DIR": "pkg",
+        
+        "pluggables": [
+            "../lib/pluggables.js"
+        ],
+
+        "tim": [
+            "./header.js",
+            "../lib/pluggables.js",
+            "../tim.js",
+            "./footer.js"
+        ],
+        
+        "tim-standard": [
+            "./header.js",
+            
+            "../lib/pluggables.js",
+            "../tim.js",
+            
+            "../plugins/regex.js",
+            "../plugins/cache.js",
+            "../plugins/dom.js",
+            "../plugins/templatetags.js",
+            "../plugins/block.js",
+            "../plugins/dotsyntax.js",
+            "../plugins/substitution.js",
+            "../plugins/array.js",
+            "../plugins/scope.js",
+            
+            "./footer.js"
+        ]
+    }
+}
