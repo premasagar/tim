@@ -476,7 +476,7 @@ var Pluggables = (function(){
 
 */
 
-window.tim = (function(Pluggables){
+var tim = (function(Pluggables){
     "use strict";
     
     // ADD / REMOVE PLUGINS
