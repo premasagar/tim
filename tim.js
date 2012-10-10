@@ -174,6 +174,9 @@ var tim = (function createTim(initSettings){
                 if (payload !== undef && substituted !== undef){
                     payload = substituted;
                 }
+                if (substituted === null){
+                    payload = '';
+                }
                 if (stopThisFilter){
                     stopThisFilter = false;
                     break;
