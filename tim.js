@@ -175,7 +175,7 @@
                 for (; i < len; i++){
                     args.push(arguments[i]);
                 }
-                
+
                 i = 0;
                 len = fns.length;
                 for (; i < len; i++){
@@ -183,6 +183,9 @@
                     substituted = fns[i][0].apply(null, args);
                     if (payload !== undef && substituted !== undef){
                         payload = substituted;
+                    }
+                    if (substituted === null){
+                        payload = '';
                     }
                     if (stopThisFilter){
                         stopThisFilter = false;
