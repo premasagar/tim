@@ -45,7 +45,7 @@
         var settings = {
                 start: "{{",
                 end  : "}}",
-                path : "[a-z0-9_][\\.a-z0-9_]*" // e.g. config.person.name
+                path : "[a-z0-9_$][\\.a-z0-9_]*" // e.g. config.person.name
             },
             templates = {},
             filters = {},
