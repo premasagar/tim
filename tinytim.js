@@ -38,11 +38,25 @@
 
         var start   = "{{",
             end     = "}}",
+            allowed = "mod|even|odd",
             path    = "[a-z0-9_$][\\.a-z0-9_]*", // e.g. config.person.name
             pattern = new RegExp(start + "\\s*("+ path +")\\s*" + end, "gi"),
+            functions = new RegExp( start + "\\s*@(" + allowed + ")\\s*(\\d+)*\\s*" + end + "([\\s\\S]+?)" + start + "\\s*@end(\\1)\\s*" + end , "gi"),
             undef;
         
-        return function(template, data){
+        return function(template, data, index){
+            // Interpret allowed function tags in the templates
+            template = template.replace(functions,function(match, tag, criteria, content){
+                switch(tag.toLowerCase()) {
+                    case 'even':
+                        return ( index % 2 === 0 ) ? content : '';
+                    case 'odd':
+                        return ( index % 2 === 1 ) ? content : '';
+                    case 'mod':
+                        return ( index % criteria === 0 ) ? content : '';
+                }
+                return '' // should never get here but just in case;
+            });
             // Merge data into the template string
             return template.replace(pattern, function(tag, token){
                 var path = token.split("."),
